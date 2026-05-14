@@ -11,7 +11,20 @@
         <title inertia>{{ config('app.name') }}</title>
         <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
         <link rel="icon" type="image/png" href="/favicon.png" />
-        @vite('resources/js/app.js')
+
+        {{-- Google Fonts: preconnect agar browser buka koneksi lebih awal,
+             &display=swap mencegah invisible text selama font belum termuat --}}
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet"
+              href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;300;400;500;600;700;800&display=swap"
+              media="print" onload="this.media='all'">
+        <noscript>
+            <link rel="stylesheet"
+                  href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;300;400;500;600;700;800&display=swap">
+        </noscript>
+
+        @vite('resources/js/app.ts')
         @inertiaHead
     </head>
     <body data-sidebartype="full">
