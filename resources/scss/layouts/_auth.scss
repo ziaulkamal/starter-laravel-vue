@@ -1,0 +1,25 @@
+// Auth pages — login, register, forgot password
+
+.auth-customizer-none {
+    .customizer-btn {
+        display: none;
+    }
+}
+
+.radial-gradient {
+    background: radial-gradient(
+        ellipse at 50% 40%,
+        rgba(var(--bs-primary-rgb), 0.15) 0%,
+        rgba(var(--bs-primary-rgb), 0.06) 60%,
+        rgba(var(--bs-primary-rgb), 0.02) 100%
+    );
+    background-color: rgba(var(--bs-primary-rgb), 0.05);
+}
+
+.auth-card {
+    .card {
+        border-radius: 12px;
+        border: 0;
+        box-shadow: rgba(149, 157, 165, 0.2) 0 8px 24px;
+    }
+}

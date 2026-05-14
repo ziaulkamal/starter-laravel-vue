@@ -28,3 +28,4 @@ Thumbs.db
 /.claude
 composer.lock
 package-lock.json
+/template-html
