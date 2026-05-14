@@ -24,6 +24,7 @@
                     </a>
                     <ul :id="collapseId(entry.href)"
                         class="collapse first-level"
+                        data-bs-parent="#sidebarnav"
                         :class="{ show: isGroupActive(entry) }">
                         <li v-for="child in entry.children"
                             :key="child.href"
@@ -42,7 +43,7 @@
                 <!-- Item flat (tanpa submenu) -->
                 <li v-else
                     class="sidebar-item"
-                    :class="{ active: isActive(entry.href) }">
+                    :class="{ active: isPathActive(entry.href) }">
                     <Link class="sidebar-link" :href="entry.href">
                         <span><i :class="entry.icon"></i></span>
                         <span class="hide-menu">{{ entry.label }}</span>
@@ -65,7 +66,7 @@ import SimpleBar from 'simplebar';
 import { useMenu } from '@/Composables/useMenu';
 
 const menu = computed(() => usePage().props.menu ?? []);
-const { isActive, isGroupActive, collapseId } = useMenu();
+const { isActive, isPathActive, isGroupActive, collapseId } = useMenu();
 
 onMounted(() => {
     const scrollEl = document.querySelector('.scroll-sidebar');
