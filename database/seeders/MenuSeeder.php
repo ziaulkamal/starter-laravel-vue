@@ -82,7 +82,8 @@ class MenuSeeder extends Seeder
                 'href'        => '/settings/menus',
                 'order_index' => 8,
                 'children'    => [
-                    ['label' => 'Daftar Menu', 'href' => '/settings/menus', 'order_index' => 0],
+                    ['label' => 'Menu Sidebar',   'href' => '/settings/menus',        'order_index' => 0],
+                    ['label' => 'Menu Profil',     'href' => '/settings/profile-menu', 'order_index' => 1],
                 ],
             ],
         ];

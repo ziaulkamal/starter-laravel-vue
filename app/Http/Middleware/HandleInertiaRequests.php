@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Models\Menu;
+use App\Models\ProfileMenuItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Inertia\Middleware;
@@ -30,7 +31,8 @@ class HandleInertiaRequests extends Middleware
                 'error'   => fn () => $request->session()->get('error'),
             ],
 
-            'menu' => $this->sharedMenu(),
+            'menu'         => $this->sharedMenu(),
+            'profile_menu' => $this->sharedProfileMenu(),
         ];
     }
 
@@ -69,5 +71,20 @@ class HandleInertiaRequests extends Middleware
         }
 
         return $entry;
+    }
+
+    private function sharedProfileMenu(): array
+    {
+        return Cache::rememberForever('app.profile_menu', function () {
+            return ProfileMenuItem::active()
+                ->orderBy('order_index')
+                ->get()
+                ->map(fn (ProfileMenuItem $item) => [
+                    'label' => $item->label,
+                    'icon'  => $item->icon,
+                    'href'  => $item->href,
+                ])
+                ->toArray();
+        });
     }
 }

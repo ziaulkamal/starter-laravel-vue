@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Settings\MenuController;
+use App\Http\Controllers\Settings\ProfileMenuController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('settings')->name('settings.')->group(function () {
@@ -14,6 +15,16 @@ Route::prefix('settings')->name('settings.')->group(function () {
         ->name('menus.destroy-all');
 
     Route::resource('menus', MenuController::class)
+        ->only(['index', 'store', 'update', 'destroy']);
+
+    // ── Profile Menu ──────────────────────────────────────────────
+    Route::post('profile-menu/reorder', [ProfileMenuController::class, 'reorder'])
+        ->name('profile-menu.reorder');
+
+    Route::delete('profile-menu/destroy-all', [ProfileMenuController::class, 'destroyAll'])
+        ->name('profile-menu.destroy-all');
+
+    Route::resource('profile-menu', ProfileMenuController::class, ['parameters' => ['profile-menu' => 'profileMenuItem']])
         ->only(['index', 'store', 'update', 'destroy']);
 
 });

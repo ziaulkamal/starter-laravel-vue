@@ -23,5 +23,6 @@ declare module '@inertiajs/vue3' {
             error: string | null
         }
         menu: NavEntry[]
+        profile_menu: Array<{ label: string; icon: string | null; href: string }>
     }
 }

@@ -37,10 +37,7 @@
             .nav-link {
               color: var(--bs-primary);
             }
-
-            .dropdown-menu {
-              display: block;
-            }
+            // dropdown hanya terbuka via klik (data-bs-toggle), bukan hover
           }
         }
         .nav-link {
