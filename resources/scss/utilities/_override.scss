@@ -1,0 +1,28 @@
+// ----------------------------------------------
+// Logo Light / Dark Mode
+// ----------------------------------------------
+.dark-logo { display: inline-block; }
+.light-logo { display: none; }
+
+[data-bs-theme="dark"] {
+    .dark-logo { display: none; }
+    .light-logo { display: inline-block; }
+}
+
+// ----------------------------------------------
+// Position Style
+// ----------------------------------------------
+.z-index-5 {
+    z-index: 5 !important;
+}
+
+// ----------------------------------------------
+// Text  Style
+// ----------------------------------------------
+.text-body-color {
+    color: var(--bs-body-color-rgb);
+}
+
+.title-part-padding {
+    padding: 15px 30px;
+}
