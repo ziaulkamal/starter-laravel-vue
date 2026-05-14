@@ -68,12 +68,22 @@ class MenuSeeder extends Seeder
                 'href'        => '/profile',
                 'order_index' => 6,
             ],
+
+            // ── Pengaturan ────────────────────────────────────────
+            [
+                'type'        => 'section',
+                'label'       => 'Pengaturan',
+                'order_index' => 7,
+            ],
             [
                 'type'        => 'item',
-                'label'       => 'Settings',
-                'icon'        => 'ti ti-settings',
-                'href'        => '/settings',
-                'order_index' => 7,
+                'label'       => 'Pengaturan Menu',
+                'icon'        => 'ti ti-menu-2',
+                'href'        => '/settings/menus',
+                'order_index' => 8,
+                'children'    => [
+                    ['label' => 'Daftar Menu', 'href' => '/settings/menus', 'order_index' => 0],
+                ],
             ],
         ];
 

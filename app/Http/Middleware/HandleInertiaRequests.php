@@ -2,42 +2,72 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Menu;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
 {
-    /**
-     * The root template that's loaded on the first page visit.
-     *
-     * @see https://inertiajs.com/server-side-setup#root-template
-     *
-     * @var string
-     */
     protected $rootView = 'app';
 
-    /**
-     * Determines the current asset version.
-     *
-     * @see https://inertiajs.com/asset-versioning
-     */
     public function version(Request $request): ?string
     {
         return parent::version($request);
     }
 
-    /**
-     * Define the props that are shared by default.
-     *
-     * @see https://inertiajs.com/shared-data
-     *
-     * @return array<string, mixed>
-     */
     public function share(Request $request): array
     {
         return [
             ...parent::share($request),
-            //
+
+            'auth' => [
+                'user' => $request->user()?->only('id', 'name', 'email'),
+            ],
+
+            'flash' => [
+                'success' => fn () => $request->session()->get('success'),
+                'error'   => fn () => $request->session()->get('error'),
+            ],
+
+            'menu' => $this->sharedMenu(),
         ];
+    }
+
+    private function sharedMenu(): array
+    {
+        return Cache::rememberForever('app.menu', function () {
+            return Menu::with(['children' => fn ($q) => $q->orderBy('order_index')])
+                ->active()
+                ->roots()
+                ->orderBy('order_index')
+                ->get()
+                ->map(fn (Menu $item) => $this->formatEntry($item))
+                ->toArray();
+        });
+    }
+
+    private function formatEntry(Menu $item): array
+    {
+        $entry = [
+            'type'  => $item->type,
+            'label' => $item->label,
+        ];
+
+        if ($item->type === 'item') {
+            $entry['icon'] = $item->icon;
+            $entry['href'] = $item->href;
+
+            if ($item->children->isNotEmpty()) {
+                $entry['children'] = $item->children
+                    ->map(fn (Menu $child) => [
+                        'label' => $child->label,
+                        'href'  => $child->href,
+                    ])
+                    ->toArray();
+            }
+        }
+
+        return $entry;
     }
 }

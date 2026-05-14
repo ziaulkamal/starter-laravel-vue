@@ -59,12 +59,12 @@
 </template>
 
 <script setup>
-import { onMounted } from 'vue';
-import { Link } from '@inertiajs/vue3';
+import { computed, onMounted } from 'vue';
+import { Link, usePage } from '@inertiajs/vue3';
 import SimpleBar from 'simplebar';
-import { menu } from '@/config/menu';
 import { useMenu } from '@/Composables/useMenu';
 
+const menu = computed(() => usePage().props.menu ?? []);
 const { isActive, isGroupActive, collapseId } = useMenu();
 
 onMounted(() => {
