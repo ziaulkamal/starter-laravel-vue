@@ -1,4 +1,6 @@
 <template>
+    <Head :title="title ? `${title} - ${appName}` : appName" />
+
     <div class="preloader" v-if="loading">
         <img src="/favicon.png" alt="loader" class="lds-ripple img-fluid" />
     </div>
@@ -44,7 +46,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
-import { router, usePage } from '@inertiajs/vue3';
+import { Head, router, usePage } from '@inertiajs/vue3';
 import defaultAvatar from '@images/profile/user-1.jpg';
 import AppSidebar from '@/Components/Sidebar/AppSidebar.vue';
 import AppHeader from '@/Components/Header/AppHeader.vue';
@@ -60,6 +62,8 @@ const page = usePage();
 const userName = page.props.auth?.user?.name ?? 'User';
 const userRole = page.props.auth?.user?.role ?? '';
 const userAvatar = page.props.auth?.user?.avatar ?? defaultAvatar;
+
+const appName = page.props.appName ?? document.title;
 
 const { toggleSidebar, closeMobileSidebar } = useSidebar();
 
