@@ -5,7 +5,7 @@
             <img src="@images/logos/light-logo.svg" class="light-logo" alt="Logo-Light" />
         </a>
         <a href="javascript:void(0)"
-           class="sidebartoggler ms-auto text-decoration-none fs-5 d-block d-xl-none"
+           class="sidebartoggler ms-auto text-decoration-none fs-5 d-block d-lg-none"
            @click.prevent="$emit('close-sidebar')">
             <i class="ti ti-x"></i>
         </a>

@@ -206,7 +206,8 @@
 // -----------------------------------
 
 // About LG Screen
-@include media-breakpoint-up(xl) {
+// [CHANGED] xl (1300px) → lg (992px): sidebar visible di laptop umum
+@include media-breakpoint-up(lg) {
   [data-layout="vertical"] {
     [data-sidebartype="mini-sidebar"] {
       .left-sidebar {
@@ -233,7 +234,8 @@
 }
 
 // Down LG Screen
-@include media-breakpoint-down(xl) {
+// [CHANGED] xl (1300px) → lg (992px): sidebar tersembunyi di bawah 992px saja
+@include media-breakpoint-down(lg) {
   .left-sidebar {
     width: $sidebar-width-full;
     position: fixed;

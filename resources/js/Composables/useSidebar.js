@@ -1,6 +1,7 @@
 import { onMounted, onBeforeUnmount } from 'vue';
 
-const XL_BREAKPOINT = 1300;
+// [CHANGED] 1300 → 992: sinkron dengan media-breakpoint-up(lg) di CSS
+const XL_BREAKPOINT = 992;
 
 export function useSidebar() {
     function isMobile() {

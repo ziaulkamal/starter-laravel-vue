@@ -35,10 +35,10 @@ ul {
 }
 
 
-// 
+//
 // Above Large screen
-// 
-@include media-breakpoint-up(xl) {
+// [CHANGED] xl (1300px) → lg (992px): page-wrapper margin & topbar width aktif di 992px+
+@include media-breakpoint-up(lg) {
   [data-layout="vertical"] {
     .topbar {
       width: calc(100% - #{$sidebar-width-full});
