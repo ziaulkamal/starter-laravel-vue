@@ -1,58 +1,323 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Starter Laravel + Vue + Inertia
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Starter kit full-stack berbasis **Laravel 13**, **Vue 3**, dan **Inertia.js** dengan tema admin Bootstrap 5 (Modernize). Dirancang sebagai fondasi yang scalable untuk aplikasi web modern dengan dukungan TypeScript bertahap.
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Tech Stack
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+### Backend
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+| Library | Versi | Fungsi |
+|---|---|---|
+| PHP | `^8.3` | Runtime bahasa server |
+| Laravel | `^13.8` | Framework PHP — routing, ORM, middleware, auth |
+| laravel/tinker | `^3.0` | REPL interaktif untuk Artisan |
+| Inertia.js (server) | via Composer | Jembatan Laravel ↔ Vue, menggantikan kebutuhan REST API terpisah |
 
-## Learning Laravel
+### Frontend
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+| Library | Versi | Fungsi |
+|---|---|---|
+| Vue | `^3.5` | Framework UI reaktif — Composition API |
+| @inertiajs/vue3 | `^2.0` | Inertia adapter untuk Vue 3 — navigasi SPA tanpa REST API |
+| Bootstrap | `^5.3.8` | CSS framework utama — grid, komponen, utility class |
+| @popperjs/core | `^2.11.8` | Peer dependency Bootstrap — positioning dropdown & tooltip |
+| SimpleBar | `^6.3.3` | Custom scrollbar untuk sidebar |
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### Build & Tooling
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+| Library | Versi | Fungsi |
+|---|---|---|
+| Vite | `^8.0.0` | Build tool dan dev server dengan HMR |
+| laravel-vite-plugin | `^3.1` | Integrasi Vite ↔ Laravel (hot reload, asset manifest) |
+| @vitejs/plugin-vue | `^6.0` | Kompilasi Vue SFC di Vite |
+| Sass | `^1.99.0` | Preprocessor SCSS |
+| TypeScript | `^6.0.3` | Tipe statis — konfigurasi gradual migration dari JS |
+| vue-tsc | `^3.2.9` | Type checker khusus Vue SFC (`npm run type-check`) |
+| @types/node | `^25.7.0` | Tipe Node.js untuk tooling dan `vite.config.js` |
 
-## Agentic Development
+### Asset & Icon
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+| Asset | Keterangan |
+|---|---|
+| Tabler Icons | Font icon berbasis SVG — dipanggil via class `ti ti-*` |
+| Modernize Theme | Tema Bootstrap 5 admin — SCSS-nya diintegrasikan ke `resources/scss/` |
+
+---
+
+## Persyaratan
+
+- PHP `>= 8.3` dengan ekstensi: `pdo`, `mbstring`, `openssl`, `tokenizer`, `xml`, `ctype`, `json`
+- Composer `>= 2.x`
+- Node.js `>= 20.x`
+- npm `>= 10.x`
+
+---
+
+## Instalasi
 
 ```bash
-composer require laravel/boost --dev
+# 1. Clone repository
+git clone <repo-url>
+cd starter-laravel-vue
 
-php artisan boost:install
+# 2. Install dependency PHP
+composer install
+
+# 3. Buat file environment & generate key
+cp .env.example .env
+php artisan key:generate
+
+# 4. Konfigurasi database di .env, lalu jalankan migrasi
+php artisan migrate
+
+# 5. Install dependency Node
+npm install
+
+# 6. Build assets
+npm run build
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+---
 
-## Contributing
+## Perintah
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### Frontend (npm)
 
-## Code of Conduct
+```bash
+npm run dev          # Dev server Vite dengan hot module replacement
+npm run build        # Build production ke public/build/
+npm run type-check   # Cek tipe TypeScript via vue-tsc (tanpa emit file)
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### Backend (Artisan)
 
-## Security Vulnerabilities
+```bash
+php artisan serve    # Jalankan dev server Laravel
+php artisan migrate  # Jalankan migrasi database
+php artisan tinker   # REPL interaktif
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### Shortcut (Composer)
 
-## License
+```bash
+# Jalankan semua sekaligus: Laravel server + queue + log + Vite dev server
+composer dev
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+---
+
+## Struktur Direktori
+
+```
+resources/
+├── fonts/
+│   └── tabler-icons/              # Font icon Tabler (woff2, ttf, svg)
+├── images/                        # Semua aset gambar (diimport via alias @images)
+│   ├── logos/                     # Logo dark & light (SVG)
+│   ├── profile/                   # Foto profil contoh
+│   ├── products/                  # Gambar produk contoh
+│   └── svgs/                      # Icon SVG tambahan
+├── js/
+│   ├── app.ts                     # Entry point — inisialisasi Inertia + Vue
+│   ├── env.d.ts                   # Deklarasi tipe global (Vue shim, vite/client)
+│   ├── Composables/               # Logic reusable tanpa template
+│   │   ├── useSidebar.ts          # Toggle sidebar & resize handler
+│   │   └── useTheme.ts            # Dark/light mode toggle
+│   ├── Components/
+│   │   ├── Header/
+│   │   │   ├── AppHeader.vue          # Orchestrator header
+│   │   │   ├── HeaderNotifications.vue
+│   │   │   ├── HeaderSearch.vue
+│   │   │   ├── HeaderThemeToggle.vue
+│   │   │   └── HeaderUserMenu.vue
+│   │   └── Sidebar/
+│   │       ├── AppSidebar.vue         # Orchestrator sidebar
+│   │       ├── SidebarLogo.vue
+│   │       ├── SidebarNav.vue
+│   │       └── SidebarProfile.vue
+│   ├── Layouts/
+│   │   └── AppLayout.vue          # Layout utama — sidebar + header + slot konten
+│   └── Pages/                     # Satu file per halaman (Inertia page component)
+│       └── Home.vue
+└── scss/
+    ├── app.scss                   # Entry SCSS — urutan import sangat penting
+    ├── variables/                 # Variabel tema (warna, spacing, breakpoint)
+    ├── layouts/                   # Gaya sidebar, header, dan struktur halaman
+    ├── components/                # Gaya tombol, card, dropdown
+    ├── utilities/                 # Override Bootstrap, icon size, background
+    └── vendors/                   # Gaya library pihak ketiga (SimpleBar)
+```
+
+---
+
+## Arsitektur Frontend
+
+### Alur Rendering
+
+```
+Laravel Route
+  → Inertia::render('NamaHalaman')
+    → app.ts (resolvePageComponent)
+      → AppLayout.vue (layout wrapper)
+        → Pages/NamaHalaman.vue (konten halaman)
+```
+
+### Pola Komponen
+
+- **`Layouts/`** — menerima `<slot>` konten halaman, menyediakan wrapper sidebar + header
+- **`Components/Header/`** dan **`Components/Sidebar/`** — komponen presentasional, props-driven, tidak ada side effect
+- **`Composables/`** — logic murni (tidak ada template), bisa dipakai ulang di komponen mana pun
+
+### Menambah Halaman Baru
+
+```bash
+# 1. Buat file di resources/js/Pages/
+# Contoh: resources/js/Pages/Settings.vue
+
+# 2. Tambah route di routes/web.php
+Route::get('/settings', fn() => Inertia::render('Settings'));
+```
+
+### Menambah Menu Sidebar
+
+Gunakan `slot name="sidebar-menu"` dari dalam halaman:
+
+```vue
+<AppLayout>
+    <template #sidebar-menu>
+        <li class="sidebar-item" :class="{ active: $page.url === '/settings' }">
+            <Link class="sidebar-link" href="/settings">
+                <span><i class="ti ti-settings"></i></span>
+                <span class="hide-menu">Settings</span>
+            </Link>
+        </li>
+    </template>
+
+    <!-- Konten halaman -->
+    <div class="row">...</div>
+</AppLayout>
+```
+
+---
+
+## Arsitektur SCSS
+
+`resources/scss/app.scss` adalah satu-satunya entry point. **Urutan import kritis** — variabel kustom harus masuk sebelum Bootstrap agar override bekerja:
+
+```
+1. Variabel kustom tema    → override $primary, $gray-*, breakpoint, dll. sebelum Bootstrap
+2. Bootstrap               → dikompilasi menggunakan variabel yang sudah di-override
+3. Layouts                 → sidebar, header (mengacu pada variabel Bootstrap)
+4. Components & Utilities  → layer styling di atas Bootstrap
+5. Vendors                 → SimpleBar dan library lain
+```
+
+### Path Alias
+
+| Alias | Target | Contoh |
+|---|---|---|
+| `@` | `resources/js/` | `import AppLayout from '@/Layouts/AppLayout.vue'` |
+| `@images` | `resources/images/` | `import logo from '@images/logos/dark-logo.svg'` |
+
+---
+
+## TypeScript
+
+Setup ini menggunakan **migrasi bertahap** — file `.vue` lama tetap berjalan, file baru ditulis dalam TypeScript.
+
+### Konfigurasi tsconfig.json
+
+| Setting | Nilai | Keterangan |
+|---|---|---|
+| `strict` | `true` | File `.ts` baru di-check secara ketat |
+| `allowJs` | `true` | File `.js` dan `.vue` lama tetap valid |
+| `checkJs` | `false` | File `.js` tidak dipaksa bertipe, migrasi opsional |
+| `moduleResolution` | `bundler` | Sesuai Vite — tidak butuh ekstensi eksplisit saat import |
+| `noEmit` | `true` | Vite yang handle output; `tsc` hanya untuk type check |
+
+### Urutan Migrasi yang Disarankan
+
+1. **`Composables/`** — murni logika, tidak ada template, paling mudah dideklarasikan tipenya
+2. **`Components/Header/` dan `Components/Sidebar/`** — komponen kecil, props-nya terbatas
+3. **`Layouts/AppLayout.vue`** — setelah pola tipe composable sudah terbentuk
+4. **`Pages/`** — terakhir, tipe biasanya bergantung pada shared types dari composables
+
+### Contoh Composable Bertipe
+
+```typescript
+// resources/js/Composables/useSidebar.ts
+import { onMounted, onBeforeUnmount } from 'vue'
+
+const XL_BREAKPOINT = 1300
+
+export function useSidebar() {
+    function isMobile(): boolean {
+        return window.innerWidth < XL_BREAKPOINT
+    }
+
+    function toggleSidebar(): void {
+        if (isMobile()) {
+            document.getElementById('main-wrapper')?.classList.toggle('show-sidebar')
+        } else {
+            const current = document.body.getAttribute('data-sidebartype')
+            document.body.setAttribute('data-sidebartype', current === 'full' ? 'mini-sidebar' : 'full')
+        }
+    }
+
+    // ...
+    return { toggleSidebar, closeMobileSidebar }
+}
+```
+
+---
+
+## Catatan Penting
+
+### Bootstrap 5 + Sass Deprecation Warning
+
+Bootstrap 5 menggunakan sintaks Sass lama (`@import`, `red()`, `if()`, dll.) yang deprecated di Dart Sass 2.x. Warning ini **sudah di-silence** via konfigurasi `vite.config.js`:
+
+```js
+css: {
+    preprocessorOptions: {
+        scss: {
+            quietDeps: true,  // silence semua warning dari node_modules
+            silenceDeprecations: ['import', 'global-builtin', 'color-functions', 'if-function'],
+        },
+    },
+},
+```
+
+Ini adalah pendekatan resmi yang direkomendasikan tim Bootstrap. Akan diperbaiki secara permanen saat Bootstrap 6 rilis dengan dukungan penuh `@use`/`@forward`.
+
+### Dark Mode
+
+Dark mode dikendalikan via atribut HTML di `<html>`:
+
+```js
+document.documentElement.setAttribute('data-bs-theme', 'dark')  // aktifkan dark mode
+document.documentElement.setAttribute('data-bs-theme', 'light') // kembali light mode
+```
+
+Logo switching (dark ↔ light) ditangani murni oleh CSS tanpa state Vue:
+
+```scss
+.dark-logo  { display: inline-block; }
+.light-logo { display: none; }
+
+[data-bs-theme="dark"] {
+    .dark-logo  { display: none; }
+    .light-logo { display: inline-block; }
+}
+```
+
+### Responsive Sidebar
+
+| Kondisi | Mekanisme | Class/Atribut |
+|---|---|---|
+| Desktop `>= 1300px` | Collapse/expand sidebar | `data-sidebartype="full"` atau `"mini-sidebar"` pada `<body>` |
+| Mobile `< 1300px` | Show/hide sidebar sebagai overlay | `.show-sidebar` pada `#main-wrapper` |
+
+Breakpoint 1300px sesuai dengan `xl` di `$grid-breakpoints` tema Modernize.
