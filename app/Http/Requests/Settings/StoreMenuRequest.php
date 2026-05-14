@@ -27,7 +27,7 @@ class StoreMenuRequest extends FormRequest
             'type'        => ['required', 'in:section,item'],
             'label'       => ['required', 'string', 'max:100', 'unique:menus,label'],
             'icon'        => ['nullable', 'string', 'max:100'],
-            'href'        => ['nullable', 'string', 'max:255'],
+            'href'        => ['nullable', 'string', 'max:255', 'unique:menus,href'],
             'order_index' => ['required', 'integer', 'min:0'],
             'is_active'   => ['boolean'],
         ];

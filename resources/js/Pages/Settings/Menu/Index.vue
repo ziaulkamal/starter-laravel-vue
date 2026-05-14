@@ -15,9 +15,15 @@
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h5 class="card-title fw-semibold mb-0">Manajemen Menu</h5>
-                    <button class="btn btn-primary btn-sm" @click="openCreate">
-                        <i class="ti ti-plus me-1"></i> Tambah Menu
-                    </button>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-danger btn-sm" @click="openDestroyAll"
+                            :disabled="!menus.length">
+                            <i class="ti ti-trash-x me-1"></i> Hapus Semua
+                        </button>
+                        <button class="btn btn-primary btn-sm" @click="openCreate">
+                            <i class="ti ti-plus me-1"></i> Tambah Menu
+                        </button>
+                    </div>
                 </div>
 
                 <div class="table-responsive">
@@ -154,7 +160,7 @@
                             <div class="invalid-feedback">{{ form.errors.label }}</div>
                         </div>
 
-                        <template v-if="form.type === 'item'">
+                        <div v-if="form.type === 'item'">
                             <!-- Parent -->
                             <div class="mb-3">
                                 <label class="form-label fw-medium">Parent Menu</label>
@@ -171,27 +177,32 @@
                             <!-- Icon -->
                             <div class="mb-3">
                                 <label class="form-label fw-medium">Icon</label>
-                                <div class="input-group">
-                                    <span class="input-group-text">
-                                        <i :class="form.icon || 'ti ti-layout-sidebar'" class="fs-5"></i>
-                                    </span>
-                                    <input v-model="form.icon" type="text" class="form-control"
-                                        :class="{ 'is-invalid': form.errors.icon }"
-                                        placeholder="ti ti-home" />
-                                    <div class="invalid-feedback">{{ form.errors.icon }}</div>
+                                <IconPicker
+                                    :model-value="form.icon"
+                                    :has-error="!!form.errors.icon"
+                                    @update:model-value="form.icon = $event" />
+                                <div v-if="form.errors.icon" class="text-danger small mt-1">
+                                    {{ form.errors.icon }}
                                 </div>
-                                <div class="form-text">Gunakan class Tabler Icons, contoh: <code>ti ti-home</code></div>
                             </div>
 
                             <!-- Href -->
                             <div class="mb-3">
                                 <label class="form-label fw-medium">Href / Route</label>
-                                <input v-model="form.href" type="text" class="form-control"
-                                    :class="{ 'is-invalid': form.errors.href }"
-                                    placeholder="/dashboard" />
+                                <select v-model="form.href" class="form-select"
+                                    :class="{ 'is-invalid': form.errors.href }">
+                                    <option value="">— Pilih Route GET —</option>
+                                    <option v-for="route in selectableRoutes" :key="route" :value="route">
+                                        {{ route }}
+                                    </option>
+                                </select>
                                 <div class="invalid-feedback">{{ form.errors.href }}</div>
+                                <div class="form-text">
+                                    Hanya route GET tanpa parameter yang tersedia.
+                                    Route yang sudah dipakai menu lain tidak ditampilkan.
+                                </div>
                             </div>
-                        </template>
+                        </div>
 
                         <!-- Order Index -->
                         <div class="mb-3">
@@ -251,6 +262,47 @@
             </div>
         </div>
 
+        <!-- Destroy All Confirmation Modal -->
+        <div class="modal fade" id="destroyAllModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header border-0 pb-0">
+                        <h5 class="modal-title text-danger">
+                            <i class="ti ti-alert-triangle me-2"></i>Hapus Semua Menu
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="text-muted mb-3">
+                            Tindakan ini akan menghapus <strong>seluruh menu dan section</strong>
+                            secara permanen dan tidak dapat dibatalkan.
+                        </p>
+                        <p class="mb-2 fw-medium">
+                            Ketik <code class="text-danger fs-6">hapus menu</code> untuk konfirmasi:
+                        </p>
+                        <input v-model="destroyAllConfirm" type="text" class="form-control"
+                            :class="{ 'is-valid': destroyAllConfirmValid, 'is-invalid': destroyAllConfirm && !destroyAllConfirmValid }"
+                            placeholder="hapus menu"
+                            autocomplete="off"
+                            @keyup.enter="destroyAllConfirmValid && doDestroyAll()" />
+                        <div class="valid-feedback">Konfirmasi sesuai.</div>
+                        <div class="invalid-feedback">Teks tidak sesuai.</div>
+                    </div>
+                    <div class="modal-footer border-0 pt-0">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
+                        <button type="button" class="btn btn-danger"
+                            :disabled="!destroyAllConfirmValid || destroyAllProcessing"
+                            @click="doDestroyAll">
+                            <span v-if="destroyAllProcessing"
+                                class="spinner-border spinner-border-sm me-1" role="status"></span>
+                            <i v-else class="ti ti-trash-x me-1"></i>
+                            Hapus Semua
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </AppLayout>
 </template>
 
@@ -259,9 +311,12 @@ import { ref, computed } from 'vue';
 import { useForm, router } from '@inertiajs/vue3';
 import { Modal } from 'bootstrap';
 import AppLayout from '@/Layouts/AppLayout.vue';
+import IconPicker from '@/Components/UI/IconPicker.vue';
 
 const props = defineProps({
-    menus: { type: Array, required: true },
+    menus:           { type: Array, required: true },
+    availableRoutes: { type: Array, required: true },
+    usedHrefs:       { type: Array, required: true },
 });
 
 // Only root items of type 'item' can be parents
@@ -284,6 +339,7 @@ const allMenuLabels = computed(() => {
 // ─── Form Modal ────────────────────────────────────────────────
 const isEditing = ref(false);
 const editingId = ref(null);
+const originalHref = ref(null); // href milik item yang sedang diedit
 
 const form = useForm({
     parent_id:   null,
@@ -306,23 +362,33 @@ function resetForm() {
     form.clearErrors();
 }
 
+// Route GET yang belum dipakai menu lain.
+// Saat edit: sertakan href milik item sendiri agar tetap bisa dipilih.
+const selectableRoutes = computed(() => {
+    const used = new Set(props.usedHrefs);
+    if (originalHref.value) used.delete(originalHref.value);
+    return props.availableRoutes.filter(r => !used.has(r));
+});
+
 function openCreate() {
-    isEditing.value = false;
-    editingId.value = null;
+    isEditing.value   = false;
+    editingId.value   = null;
+    originalHref.value = null;
     resetForm();
     getModal('menuModal').show();
 }
 
 function openEdit(menu) {
-    isEditing.value  = true;
-    editingId.value  = menu.id;
-    form.parent_id   = menu.parent_id ?? null;
-    form.type        = menu.type;
-    form.label       = menu.label;
-    form.icon        = menu.icon ?? '';
-    form.href        = menu.href ?? '';
-    form.order_index = menu.order_index;
-    form.is_active   = menu.is_active;
+    isEditing.value    = true;
+    editingId.value    = menu.id;
+    originalHref.value = menu.href ?? null;
+    form.parent_id     = menu.parent_id ?? null;
+    form.type          = menu.type;
+    form.label         = menu.label;
+    form.icon          = menu.icon ?? '';
+    form.href          = menu.href ?? '';
+    form.order_index   = menu.order_index;
+    form.is_active     = menu.is_active;
     form.clearErrors();
     getModal('menuModal').show();
 }
@@ -363,6 +429,31 @@ function doDelete() {
         onFinish: () => {
             deleteProcessing.value = false;
             getModal('deleteModal').hide();
+        },
+    });
+}
+
+// ─── Destroy All Modal ─────────────────────────────────────────
+const DESTROY_ALL_KEYWORD  = 'hapus menu';
+const destroyAllConfirm    = ref('');
+const destroyAllProcessing = ref(false);
+const destroyAllConfirmValid = computed(
+    () => destroyAllConfirm.value === DESTROY_ALL_KEYWORD
+);
+
+function openDestroyAll() {
+    destroyAllConfirm.value = '';
+    getModal('destroyAllModal').show();
+}
+
+function doDestroyAll() {
+    if (!destroyAllConfirmValid.value) return;
+    destroyAllProcessing.value = true;
+    router.delete('/settings/menus/destroy-all', {
+        preserveScroll: true,
+        onFinish: () => {
+            destroyAllProcessing.value = false;
+            getModal('destroyAllModal').hide();
         },
     });
 }

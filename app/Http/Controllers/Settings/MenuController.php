@@ -21,9 +21,33 @@ class MenuController extends Controller
             ->orderBy('order_index')
             ->get();
 
+        $usedHrefs = $menus
+            ->flatMap(fn (Menu $m) => collect([$m->href])->concat($m->children->pluck('href')))
+            ->filter()
+            ->values()
+            ->toArray();
+
         return Inertia::render('Settings/Menu/Index', [
-            'menus' => $menus,
+            'menus'           => $menus,
+            'availableRoutes' => $this->getGetRoutes(),
+            'usedHrefs'       => $usedHrefs,
         ]);
+    }
+
+    private function getGetRoutes(): array
+    {
+        return collect(app('router')->getRoutes()->getRoutesByMethod()['GET'] ?? [])
+            ->filter(fn ($route) =>
+                !str_contains($route->uri(), '{') &&
+                !str_starts_with($route->uri(), '_ignition') &&
+                !str_starts_with($route->uri(), 'sanctum') &&
+                $route->uri() !== 'up'
+            )
+            ->map(fn ($route) => '/' . ltrim($route->uri(), '/'))
+            ->unique()
+            ->sort()
+            ->values()
+            ->toArray();
     }
 
     public function store(StoreMenuRequest $request): RedirectResponse
@@ -54,6 +78,15 @@ class MenuController extends Controller
         $this->clearMenuCache();
 
         return back()->with('success', 'Menu berhasil dihapus.');
+    }
+
+    public function destroyAll(): RedirectResponse
+    {
+        Menu::query()->delete();
+
+        $this->clearMenuCache();
+
+        return back()->with('success', 'Semua menu berhasil dihapus.');
     }
 
     public function reorder(Request $request): RedirectResponse
