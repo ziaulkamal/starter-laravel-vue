@@ -20,9 +20,10 @@ class HandleInertiaRequests extends Middleware
 
     public function share(Request $request): array
     {
-        $user      = $request->user() instanceof User ? $request->user() : null;
-        $userRoles = $user ? $user->getRoleNames()->toArray() : [];
-        $isSuperAdmin = in_array('superadmin', $userRoles);
+        $user            = $request->user() instanceof User ? $request->user() : null;
+        $userRoles       = $user ? $user->getRoleNames()->toArray() : [];
+        $userPermissions = $user ? $user->getAllPermissions()->pluck('name')->toArray() : [];
+        $isSuperAdmin    = in_array('superadmin', $userRoles);
 
         return [
             ...parent::share($request),
@@ -31,7 +32,8 @@ class HandleInertiaRequests extends Middleware
 
             'auth' => [
                 'user'        => $user?->only('id', 'name', 'email'),
-                'permissions' => $user?->getAllPermissions()->pluck('name')->toArray(),
+                'permissions' => $userPermissions,
+                'roles'       => $userRoles,
             ],
 
             'flash' => [
@@ -39,12 +41,13 @@ class HandleInertiaRequests extends Middleware
                 'error'   => fn () => $request->session()->get('error'),
             ],
 
-            'menu'         => $this->sharedMenu($userRoles, $isSuperAdmin),
+            'menu'         => $this->sharedMenu($userRoles, $userPermissions, $isSuperAdmin),
             'profile_menu' => $this->sharedProfileMenu(),
         ];
     }
 
-    private function sharedMenu(array $userRoles, bool $isSuperAdmin): array
+    /** @param array<string> $userRoles @param array<string> $userPermissions */
+    private function sharedMenu(array $userRoles, array $userPermissions, bool $isSuperAdmin): array
     {
         /** @var array<int, array<string, mixed>> $allMenus */
         $allMenus = Cache::rememberForever('app.menu', function () {
@@ -57,37 +60,68 @@ class HandleInertiaRequests extends Middleware
                 ->orderBy('order_index')
                 ->get()
                 ->map(fn (Menu $item) => [
-                    'type'     => $item->type,
-                    'label'    => $item->label,
-                    'icon'     => $item->icon,
-                    'href'     => $item->href,
-                    'roles'    => $item->roles->pluck('name')->toArray(),
-                    'children' => $item->children->map(fn (Menu $child) => [
-                        'type'  => $child->type,
-                        'label' => $child->label,
-                        'href'  => $child->href,
-                        'roles' => $child->roles->pluck('name')->toArray(),
+                    'type'       => $item->type,
+                    'label'      => $item->label,
+                    'icon'       => $item->icon,
+                    'href'       => $item->href,
+                    'permission' => $item->permission,
+                    'roles'      => $item->roles->pluck('name')->toArray(),
+                    'children'   => $item->children->map(fn (Menu $child) => [
+                        'type'       => $child->type,
+                        'label'      => $child->label,
+                        'href'       => $child->href,
+                        'permission' => $child->permission,
+                        'roles'      => $child->roles->pluck('name')->toArray(),
                     ])->toArray(),
                 ])
                 ->toArray();
         });
 
-        return collect($allMenus)
-            ->filter(fn (array $item) => $this->canSeeMenu($item['roles'], $userRoles, $isSuperAdmin))
-            ->map(fn (array $item) => $this->formatEntry($item, $userRoles, $isSuperAdmin))
+        $filtered = collect($allMenus)
+            ->filter(fn (array $item) => $this->canSeeMenu($item, $userRoles, $userPermissions, $isSuperAdmin))
+            ->map(fn (array $item) => $this->formatEntry($item, $userRoles, $userPermissions, $isSuperAdmin))
             ->values()
             ->toArray();
+
+        return $this->stripEmptySections($filtered);
     }
 
-    private function canSeeMenu(array $menuRoles, array $userRoles, bool $isSuperAdmin): bool
+    private function stripEmptySections(array $items): array
+    {
+        $result         = [];
+        $pendingSection = null;
+
+        foreach ($items as $item) {
+            if ($item['type'] === 'section') {
+                $pendingSection = $item;
+            } else {
+                if ($pendingSection !== null) {
+                    $result[]       = $pendingSection;
+                    $pendingSection = null;
+                }
+                $result[] = $item;
+            }
+        }
+
+        return $result;
+    }
+
+    /** @param array<string, mixed> $menu @param array<string> $userRoles @param array<string> $userPermissions */
+    private function canSeeMenu(array $menu, array $userRoles, array $userPermissions, bool $isSuperAdmin): bool
     {
         if ($isSuperAdmin) return true;
-        if (empty($menuRoles)) return true;
 
-        return !empty(array_intersect($menuRoles, $userRoles));
+        if ($menu['permission'] !== null) {
+            return in_array($menu['permission'], $userPermissions);
+        }
+
+        if (empty($menu['roles'])) return true;
+
+        return !empty(array_intersect($menu['roles'], $userRoles));
     }
 
-    private function formatEntry(array $item, array $userRoles, bool $isSuperAdmin): array
+    /** @param array<string, mixed> $item @param array<string> $userRoles @param array<string> $userPermissions */
+    private function formatEntry(array $item, array $userRoles, array $userPermissions, bool $isSuperAdmin): array
     {
         $entry = [
             'type'  => $item['type'],
@@ -99,7 +133,7 @@ class HandleInertiaRequests extends Middleware
             $entry['href'] = $item['href'];
 
             $visibleChildren = collect($item['children'])
-                ->filter(fn (array $child) => $this->canSeeMenu($child['roles'], $userRoles, $isSuperAdmin));
+                ->filter(fn (array $child) => $this->canSeeMenu($child, $userRoles, $userPermissions, $isSuperAdmin));
 
             if ($visibleChildren->isNotEmpty()) {
                 $entry['children'] = $visibleChildren

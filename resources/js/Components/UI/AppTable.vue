@@ -60,6 +60,10 @@ interface Props {
     actionPermissions?: ActionPermissions;
     /** Override daftar permission (untuk demo/testing). Jika diisi, tidak membaca page.props. */
     permissionList?: string[];
+    /** Per-row guard: jika di-set, tombol edit hanya muncul jika fungsi return true */
+    rowCanEdit?: (row: Record<string, unknown>) => boolean;
+    /** Per-row guard: jika di-set, tombol delete hanya muncul jika fungsi return true */
+    rowCanDelete?: (row: Record<string, unknown>) => boolean;
     striped?: boolean;
     hover?: boolean;
     bordered?: boolean;
@@ -550,7 +554,7 @@ function hasCellSlot(key: string): boolean {
                                     <i class="ti ti-eye fs-5"></i>
                                 </button>
                                 <button
-                                    v-if="resolvedActions.edit"
+                                    v-if="resolvedActions.edit && (!rowCanEdit || rowCanEdit(row))"
                                     type="button"
                                     class="btn btn-sm bg-warning-subtle text-warning app-action-btn"
                                     title="Edit"
@@ -559,7 +563,7 @@ function hasCellSlot(key: string): boolean {
                                     <i class="ti ti-pencil fs-5"></i>
                                 </button>
                                 <button
-                                    v-if="resolvedActions.delete"
+                                    v-if="resolvedActions.delete && (!rowCanDelete || rowCanDelete(row))"
                                     type="button"
                                     class="btn btn-sm bg-danger-subtle text-danger app-action-btn"
                                     title="Hapus"

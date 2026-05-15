@@ -12,6 +12,7 @@ use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 use Inertia\Response;
+use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
 class MenuController extends Controller
@@ -33,10 +34,11 @@ class MenuController extends Controller
             ->toArray();
 
         return Inertia::render('Settings/Menu/Index', [
-            'menus'           => $menus,
-            'availableRoutes' => $this->getGetRoutes(),
-            'usedHrefs'       => $usedHrefs,
-            'roles'           => Role::orderBy('name')->get(['id', 'name']),
+            'menus'               => $menus,
+            'availableRoutes'     => $this->getGetRoutes(),
+            'usedHrefs'           => $usedHrefs,
+            'roles'               => Role::orderBy('name')->get(['id', 'name']),
+            'availablePermissions' => Permission::orderBy('name')->pluck('name'),
         ]);
     }
 

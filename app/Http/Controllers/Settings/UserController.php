@@ -39,13 +39,17 @@ class UserController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'name'     => ['required', 'string', 'max:255'],
-            'email'    => ['required', 'email', 'max:255', 'unique:users,email'],
-            'password' => ['required', Password::defaults()],
-            'role'     => ['nullable', 'string', 'exists:roles,name'],
+            'name'      => ['required', 'string', 'max:255'],
+            'email'     => ['required', 'email', 'max:255', 'unique:users,email'],
+            'password'  => ['required', Password::defaults()],
+            'role'      => ['nullable', 'string', 'exists:roles,name'],
             'is_active' => ['boolean'],
-            'avatar'   => ['nullable', 'url', 'max:500'],
+            'avatar'    => ['nullable', 'url', 'max:500'],
         ]);
+
+        if (($data['role'] ?? '') === 'superadmin' && !auth()->user()->hasRole('superadmin')) {
+            return back()->with('error', 'Hanya superadmin yang dapat memberikan role superadmin.');
+        }
 
         $user = User::create([
             'name'      => $data['name'],
@@ -64,6 +68,10 @@ class UserController extends Controller
 
     public function update(Request $request, User $user): RedirectResponse
     {
+        if ($redirect = $this->guardSuperadmin($user)) {
+            return $redirect;
+        }
+
         $data = $request->validate([
             'name'      => ['required', 'string', 'max:255'],
             'email'     => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
@@ -72,6 +80,10 @@ class UserController extends Controller
             'is_active' => ['boolean'],
             'avatar'    => ['nullable', 'url', 'max:500'],
         ]);
+
+        if (($data['role'] ?? '') === 'superadmin' && !auth()->user()->hasRole('superadmin')) {
+            return back()->with('error', 'Hanya superadmin yang dapat memberikan role superadmin.');
+        }
 
         $user->update([
             'name'      => $data['name'],
@@ -91,9 +103,22 @@ class UserController extends Controller
 
     public function destroy(User $user): RedirectResponse
     {
+        if ($redirect = $this->guardSuperadmin($user)) {
+            return $redirect;
+        }
+
         $name = $user->name;
         User::query()->whereKey($user->id)->delete();
 
         return back()->with('success', "User {$name} berhasil dihapus.");
+    }
+
+    private function guardSuperadmin(User $target): ?RedirectResponse
+    {
+        if ($target->hasRole('superadmin') && !auth()->user()->hasRole('superadmin')) {
+            return back()->with('error', 'Anda tidak memiliki akses untuk mengubah user superadmin.');
+        }
+
+        return null;
     }
 }

@@ -21,15 +21,22 @@ class DatabaseSeeder extends Seeder
             ProfileMenuSeeder::class,
         ]);
 
-        $admin = User::firstOrCreate(
-            ['email' => 'admin@admin.com'],
-            [
-                'name'      => 'Admin',
-                'password'  => 'admin',
-                'is_active' => true,
-            ]
-        );
+        $users = [
+            ['name' => 'Super Admin', 'email' => 'superadmin@demo.com', 'role' => 'superadmin'],
+            ['name' => 'Admin',       'email' => 'admin@demo.com',      'role' => 'admin'],
+            ['name' => 'User',        'email' => 'user@demo.com',        'role' => 'user'],
+        ];
 
-        $admin->syncRoles('superadmin');
+        foreach ($users as $data) {
+            $user = User::firstOrCreate(
+                ['email' => $data['email']],
+                [
+                    'name'      => $data['name'],
+                    'password'  => 'password',
+                    'is_active' => true,
+                ]
+            );
+            $user->syncRoles($data['role']);
+        }
     }
 }

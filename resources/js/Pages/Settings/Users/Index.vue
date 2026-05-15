@@ -30,6 +30,8 @@
                     :columns="columns"
                     :actions="{ edit: true, delete: true }"
                     :action-permissions="{ edit: 'users.edit', delete: 'users.delete' }"
+                    :row-can-edit="rowCanEdit"
+                    :row-can-delete="rowCanDelete"
                     :hover="true"
                     :show-row-numbers="true"
                     empty-text="Belum ada user terdaftar"
@@ -124,7 +126,7 @@
                             <select v-model="form.role" class="form-select"
                                 :class="{ 'is-invalid': form.errors.role }">
                                 <option value="">— Tanpa role —</option>
-                                <option v-for="r in roles" :key="r" :value="r">{{ r }}</option>
+                                <option v-for="r in selectableRoles" :key="r" :value="r">{{ r }}</option>
                             </select>
                             <div class="invalid-feedback">{{ form.errors.role }}</div>
                         </div>
@@ -187,8 +189,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
-import { useForm, router } from '@inertiajs/vue3';
+import { ref, computed } from 'vue';
+import { useForm, router, usePage } from '@inertiajs/vue3';
 import { Modal } from 'bootstrap';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import AppTable from '@/Components/UI/AppTable.vue';
@@ -208,6 +210,21 @@ const props = defineProps<{
     users: UserRow[];
     roles: string[];
 }>();
+
+const page = usePage();
+const authRoles = computed<string[]>(() => (page.props.auth as any)?.roles ?? []);
+const isSuperAdmin = computed(() => authRoles.value.includes('superadmin'));
+
+// Roles visible in the dropdown — non-superadmin cannot assign superadmin role
+const selectableRoles = computed(() =>
+    isSuperAdmin.value ? props.roles : props.roles.filter(r => r !== 'superadmin')
+);
+
+// Per-row guards passed to AppTable
+const rowCanEdit   = (row: Record<string, unknown>) =>
+    isSuperAdmin.value || !(row.roles as string[]).includes('superadmin');
+const rowCanDelete = (row: Record<string, unknown>) =>
+    isSuperAdmin.value || !(row.roles as string[]).includes('superadmin');
 
 const columns: TableColumn[] = [
     { key: 'name',          label: 'Nama' },

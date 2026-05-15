@@ -21,6 +21,7 @@ class Menu extends Model
         'label',
         'icon',
         'href',
+        'permission',
         'order_index',
         'is_active',
     ];

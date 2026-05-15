@@ -45,7 +45,7 @@
                                 <th>Href</th>
                                 <th class="text-center">Urutan</th>
                                 <th class="text-center">Status</th>
-                                <th>Akses Role</th>
+                                <th>Akses</th>
                                 <th class="text-end">Aksi</th>
                             </tr>
                         </thead>
@@ -76,7 +76,7 @@
                                         </span>
                                     </td>
                                     <td>
-                                        <RoleBadges :roles="menu.roles" />
+                                        <AccessBadges :permission="menu.permission" :roles="menu.roles" />
                                     </td>
                                     <td class="text-end">
                                         <button class="btn btn-sm btn-outline-primary me-1" title="Edit"
@@ -218,6 +218,26 @@
                                     Route yang sudah dipakai menu lain tidak ditampilkan.
                                 </div>
                             </div>
+
+                            <!-- Required Permission -->
+                            <div class="mb-3">
+                                <label class="form-label fw-medium d-flex align-items-center gap-1">
+                                    <i class="ti ti-key text-muted"></i>
+                                    Permission yang Dibutuhkan
+                                </label>
+                                <select v-model="form.permission" class="form-select"
+                                    :class="{ 'is-invalid': form.errors.permission }">
+                                    <option value="">— Tidak ada (ikuti pengaturan Role) —</option>
+                                    <option v-for="perm in availablePermissions" :key="perm" :value="perm">
+                                        {{ perm }}
+                                    </option>
+                                </select>
+                                <div class="invalid-feedback">{{ form.errors.permission }}</div>
+                                <div class="form-text">
+                                    Jika diset, menu hanya muncul untuk user yang memiliki permission ini.
+                                    Superadmin selalu melihat semua menu.
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Order Index -->
@@ -240,11 +260,12 @@
                             </div>
                         </div>
 
-                        <!-- Akses Role -->
+                        <!-- Akses Role (fallback) -->
                         <div class="mb-1">
                             <label class="form-label fw-medium d-flex align-items-center gap-1">
                                 <i class="ti ti-shield-lock text-muted"></i>
-                                Akses Role
+                                Batasi Akses by Role
+                                <span class="badge text-bg-secondary fw-normal ms-1" style="font-size:.65rem">Fallback</span>
                             </label>
                             <div class="d-flex flex-wrap gap-3">
                                 <div v-for="role in roles" :key="role.id" class="form-check">
@@ -261,8 +282,8 @@
                                 </div>
                             </div>
                             <div class="form-text">
-                                Kosongkan agar menu terlihat oleh semua role.
-                                Superadmin selalu bisa melihat semua menu.
+                                Digunakan jika "Permission" di atas tidak diset.
+                                Kosongkan agar terlihat oleh semua role.
                             </div>
                             <div v-if="form.errors.role_ids" class="text-danger small mt-1">
                                 {{ form.errors.role_ids }}
@@ -358,11 +379,14 @@ import { Modal } from 'bootstrap';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import IconPicker from '@/Components/UI/IconPicker.vue';
 
-// ── Sub-component: role badges ──────────────────────────────────
-const RoleBadges = {
-    props: { roles: Array },
+// ── Sub-component: access badges ────────────────────────────────
+const AccessBadges = {
+    props: { permission: String, roles: Array },
     template: `
-        <span v-if="roles?.length" class="d-flex flex-wrap gap-1">
+        <span v-if="permission" class="d-flex flex-wrap gap-1">
+            <span class="badge rounded-pill text-bg-info font-monospace">{{ permission }}</span>
+        </span>
+        <span v-else-if="roles?.length" class="d-flex flex-wrap gap-1">
             <span v-for="r in roles" :key="r.id"
                 class="badge rounded-pill text-bg-warning text-capitalize">{{ r.name }}</span>
         </span>
@@ -371,10 +395,11 @@ const RoleBadges = {
 };
 
 const props = defineProps({
-    menus:           { type: Array, required: true },
-    availableRoutes: { type: Array, required: true },
-    usedHrefs:       { type: Array, required: true },
-    roles:           { type: Array, required: true },
+    menus:                { type: Array,  required: true },
+    availableRoutes:      { type: Array,  required: true },
+    usedHrefs:            { type: Array,  required: true },
+    roles:                { type: Array,  required: true },
+    availablePermissions: { type: Array,  required: true },
 });
 
 const rootMenuItems = computed(() =>
@@ -401,6 +426,7 @@ const form = useForm({
     label:       '',
     icon:        '',
     href:        '',
+    permission:  '',
     order_index: 0,
     is_active:   true,
     role_ids:    [],
@@ -412,6 +438,7 @@ function resetForm() {
     form.label       = '';
     form.icon        = '';
     form.href        = '';
+    form.permission  = '';
     form.order_index = 0;
     form.is_active   = true;
     form.role_ids    = [];
@@ -441,6 +468,7 @@ function openEdit(menu) {
     form.label         = menu.label;
     form.icon          = menu.icon ?? '';
     form.href          = menu.href ?? '';
+    form.permission    = menu.permission ?? '';
     form.order_index   = menu.order_index;
     form.is_active     = menu.is_active;
     form.role_ids      = (menu.roles ?? []).map(r => r.id);

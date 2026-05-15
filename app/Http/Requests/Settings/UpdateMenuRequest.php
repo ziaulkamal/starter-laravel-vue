@@ -29,6 +29,7 @@ class UpdateMenuRequest extends FormRequest
             'label'       => ['sometimes', 'string', 'max:100', Rule::unique('menus', 'label')->ignore($this->route('menu'))],
             'icon'        => ['nullable', 'string', 'max:100'],
             'href'        => ['nullable', 'string', 'max:255', Rule::unique('menus', 'href')->ignore($this->route('menu'))],
+            'permission'  => ['nullable', 'string', 'max:100'],
             'order_index' => ['sometimes', 'integer', 'min:0'],
             'is_active'   => ['boolean'],
             'role_ids'    => ['nullable', 'array'],
