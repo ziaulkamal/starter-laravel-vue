@@ -1,5 +1,27 @@
 <template>
-    <AppLayout title="Pengaturan Menu Profil">
+    <AppLayout
+        title="Pengaturan Menu Profil"
+        :breadcrumb="[{ label: 'Pengaturan' }, { label: 'Pengaturan Menu Profil' }]"
+    >
+        <template #page-actions>
+            <div class="d-flex gap-2">
+                <button
+                    class="btn btn-outline-danger btn-sm d-flex align-items-center gap-1"
+                    :disabled="!items.length"
+                    @click="openDestroyAll"
+                >
+                    <i class="ti ti-trash-x fs-5"></i>
+                    <span class="d-none d-sm-inline">Hapus Semua</span>
+                </button>
+                <button
+                    class="btn btn-primary btn-sm d-flex align-items-center gap-1"
+                    @click="openCreate"
+                >
+                    <i class="ti ti-plus fs-5"></i>
+                    <span>Tambah Item</span>
+                </button>
+            </div>
+        </template>
 
         <!-- Flash -->
         <div v-if="$page.props.flash.success" class="alert alert-success alert-dismissible fade show mb-3" role="alert">
@@ -12,20 +34,7 @@
         </div>
 
         <div class="card">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h5 class="card-title fw-semibold mb-0">Manajemen Menu Profil</h5>
-                    <div class="d-flex gap-2">
-                        <button class="btn btn-outline-danger btn-sm" @click="openDestroyAll"
-                            :disabled="!items.length">
-                            <i class="ti ti-trash-x me-1"></i> Hapus Semua
-                        </button>
-                        <button class="btn btn-primary btn-sm" @click="openCreate">
-                            <i class="ti ti-plus me-1"></i> Tambah Item
-                        </button>
-                    </div>
-                </div>
-
+            <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0">
                         <thead class="table-light">

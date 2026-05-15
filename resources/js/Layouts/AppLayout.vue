@@ -35,6 +35,15 @@
 
             <div class="body-wrapper">
                 <div class="container-fluid">
+                    <AppBreadcrumb
+                        v-if="showBreadcrumb"
+                        :title="title"
+                        :items="breadcrumb"
+                    >
+                        <template v-if="$slots['page-actions']" #actions>
+                            <slot name="page-actions" />
+                        </template>
+                    </AppBreadcrumb>
                     <slot />
                 </div>
             </div>
@@ -45,15 +54,17 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { Head, router, usePage } from '@inertiajs/vue3';
 import defaultAvatar from '@images/profile/user-1.jpg';
 import AppSidebar from '@/Components/Sidebar/AppSidebar.vue';
 import AppHeader from '@/Components/Header/AppHeader.vue';
+import AppBreadcrumb from '@/Components/UI/AppBreadcrumb.vue';
 import { useSidebar } from '@/Composables/useSidebar';
 
 defineProps({
-    title: { type: String, default: '' },
+    title:      { type: String, default: '' },
+    breadcrumb: { type: Array,  default: () => [] },
 });
 
 const loading = ref(true);
@@ -64,6 +75,13 @@ const userRole = page.props.auth?.user?.role ?? '';
 const userAvatar = page.props.auth?.user?.avatar ?? defaultAvatar;
 
 const appName = page.props.appName ?? document.title;
+
+// Skip breadcrumb on the root dashboard page only.
+// Login/Register use AuthLayout so they never reach here.
+const showBreadcrumb = computed(() => {
+    const pathname = page.url.split('?')[0];
+    return pathname !== '/';
+});
 
 const { toggleSidebar, closeMobileSidebar } = useSidebar();
 
