@@ -11,7 +11,7 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
         then: function () {
-            Route::middleware('web')
+            Route::middleware(['web', 'auth'])
                 ->group(base_path('routes/settings.php'));
         },
     )
@@ -21,5 +21,12 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        $exceptions->render(function (
+            \Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException $e,
+            \Illuminate\Http\Request $request
+        ) {
+            if ($request->isMethod('GET')) {
+                return redirect('/');
+            }
+        });
     })->create();

@@ -1,38 +1,37 @@
 <?php
 
+use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\Settings\RoleController;
+use App\Http\Controllers\Settings\UserController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-// ── Auth ─────────────────────────────────────────────────────────
-Route::get('/login', fn () => Inertia::render('Auth/Login'))->name('login');
-Route::get('/register', fn () => Inertia::render('Auth/Register'))->name('register');
-Route::post('/logout', fn () => redirect('/login'))->name('logout');
+// ── Guest only ────────────────────────────────────────────────────
+Route::middleware('guest')->group(function () {
+    Route::get('/login',    [AuthController::class, 'showLogin'])->name('login');
+    Route::post('/login',   [AuthController::class, 'login']);
+    Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
+    Route::post('/register',[AuthController::class, 'register']);
+});
+
+Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->name('logout');
 
 // ── Authenticated ─────────────────────────────────────────────────
-Route::middleware('web')->group(function () {
+Route::middleware('auth')->group(function () {
 
-    // Dashboard
     Route::get('/', fn () => Inertia::render('Home'))->name('dashboard');
-
-    // Profile
     Route::get('/profile', fn () => Inertia::render('Profile/Index'))->name('profile');
 
-    // Users
-    Route::prefix('users')->name('users.')->group(function () {
-        Route::get('/',        fn () => Inertia::render('Users/Index'))->name('index');
-        Route::get('/create',  fn () => Inertia::render('Users/Create'))->name('create');
-        Route::get('/{id}',    fn () => Inertia::render('Users/Show'))->name('show');
-        Route::get('/{id}/edit', fn () => Inertia::render('Users/Edit'))->name('edit');
+    // Settings: Users & Roles
+    Route::prefix('settings')->name('settings.')->group(function () {
+        Route::get('/users',           [UserController::class, 'index'])->name('users.index');
+        Route::post('/users',          [UserController::class, 'store'])->name('users.store');
+        Route::put('/users/{user}',    [UserController::class, 'update'])->name('users.update');
+        Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
+
+        Route::get('/roles',           [RoleController::class, 'index'])->name('roles.index');
+        Route::put('/roles/{role}',    [RoleController::class, 'update'])->name('roles.update');
     });
 
-    // Roles & Permissions
-    Route::prefix('roles')->name('roles.')->group(function () {
-        Route::get('/', fn () => Inertia::render('Roles/Index'))->name('index');
-    });
-
-    Route::prefix('permissions')->name('permissions.')->group(function () {
-        Route::get('/', fn () => Inertia::render('Permissions/Index'))->name('index');
-    });
-
-    Route::get('/demo/table', fn() => inertia('Components/TableDemo'));
+    Route::get('/demo/table', fn () => Inertia::render('Components/TableDemo'));
 });
