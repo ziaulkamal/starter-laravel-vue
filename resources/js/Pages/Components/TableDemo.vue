@@ -18,6 +18,7 @@
                     :columns="employeeColumns"
                     :actions="{ view: true, edit: true, delete: true }"
                     :action-permissions="{ view: 'employees.view', edit: 'employees.edit', delete: 'employees.delete' }"
+                    :permission-list="[]"
                     :show-row-numbers="true"
                     :hover="true"
                     @view="onView"

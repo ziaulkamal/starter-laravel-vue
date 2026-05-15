@@ -58,6 +58,8 @@ interface Props {
      * Jika array permissions belum ada di props → tetap tampil (default allow).
      */
     actionPermissions?: ActionPermissions;
+    /** Override daftar permission (untuk demo/testing). Jika diisi, tidak membaca page.props. */
+    permissionList?: string[];
     striped?: boolean;
     hover?: boolean;
     bordered?: boolean;
@@ -93,7 +95,8 @@ const page = usePage();
 
 function can(permissionKey: string | undefined): boolean {
     if (!permissionKey) return true;
-    const perms = (page.props.auth as Record<string, unknown>)?.permissions as string[] | undefined;
+    const perms = props.permissionList
+        ?? (page.props.auth as Record<string, unknown>)?.permissions as string[] | undefined;
     if (!perms) return true;
     return perms.includes(permissionKey);
 }

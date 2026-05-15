@@ -34,4 +34,5 @@ Route::middleware('web')->group(function () {
         Route::get('/', fn () => Inertia::render('Permissions/Index'))->name('index');
     });
 
+    Route::get('/demo/table', fn() => inertia('Components/TableDemo'));
 });
