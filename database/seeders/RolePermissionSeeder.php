@@ -13,37 +13,45 @@ class RolePermissionSeeder extends Seeder
     {
         app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
-        $permissions = [
-            'users.view',
-            'users.create',
-            'users.edit',
-            'users.delete',
-            'employees.view',
-            'employees.edit',
-            'employees.delete',
-            'settings.menu',
-            'settings.profile-menu',
-        ];
+        // Auto-generate permissions dari config/modules.php
+        $allPermissions = $this->buildPermissions();
 
-        foreach ($permissions as $name) {
+        foreach ($allPermissions as $name) {
             Permission::firstOrCreate(['name' => $name]);
         }
 
-        $user = Role::firstOrCreate(['name' => 'user']);
-        $user->syncPermissions([]);
+        // Hapus permission lama yang tidak ada di config lagi
+        Permission::whereNotIn('name', $allPermissions)->delete();
 
-        $admin = Role::firstOrCreate(['name' => 'admin']);
-        $admin->syncPermissions([
-            'users.view',
-            'users.create',
-            'users.edit',
-            'employees.view',
-            'employees.edit',
-            'settings.menu',
-            'settings.profile-menu',
-        ]);
+        // ── Role: user — tidak punya permission default ──────────────
+        Role::firstOrCreate(['name' => 'user'])
+            ->syncPermissions([]);
 
-        $superadmin = Role::firstOrCreate(['name' => 'superadmin']);
-        $superadmin->syncPermissions($permissions);
+        // ── Role: admin — semua kecuali delete ───────────────────────
+        Role::firstOrCreate(['name' => 'admin'])
+            ->syncPermissions(
+                collect($allPermissions)
+                    ->reject(fn ($p) => str_ends_with($p, '.delete'))
+                    ->values()
+                    ->all()
+            );
+
+        // ── Role: superadmin — semua permission ──────────────────────
+        Role::firstOrCreate(['name' => 'superadmin'])
+            ->syncPermissions($allPermissions);
+    }
+
+    /** Flatten config/modules.php → ['users.view', 'users.create', ...] */
+    private function buildPermissions(): array
+    {
+        $permissions = [];
+
+        foreach (config('modules', []) as $module => $actions) {
+            foreach ($actions as $action) {
+                $permissions[] = "{$module}.{$action}";
+            }
+        }
+
+        return $permissions;
     }
 }
