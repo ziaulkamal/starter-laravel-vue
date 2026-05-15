@@ -5,8 +5,14 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Spatie\Permission\Models\Role;
 
+/**
+ * @method static Builder|static active()
+ * @method static Builder|static roots()
+ */
 class Menu extends Model
 {
     protected $fillable = [
@@ -37,11 +43,10 @@ class Menu extends Model
                     ->orderBy('order_index');
     }
 
-    // Diaktifkan saat role engine tersedia
-    // public function roles(): BelongsToMany
-    // {
-    //     return $this->belongsToMany(Role::class, 'menu_role');
-    // }
+    public function roles(): BelongsToMany
+    {
+        return $this->belongsToMany(Role::class, 'menu_role');
+    }
 
     // ── Scopes ───────────────────────────────────────────────────
 

@@ -92,7 +92,7 @@ class UserController extends Controller
     public function destroy(User $user): RedirectResponse
     {
         $name = $user->name;
-        $user->delete();
+        User::query()->whereKey($user->id)->delete();
 
         return back()->with('success', "User {$name} berhasil dihapus.");
     }

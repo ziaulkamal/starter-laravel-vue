@@ -8,6 +8,7 @@ use App\Http\Requests\Settings\UpdateProfileMenuRequest;
 use App\Models\ProfileMenuItem;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -16,7 +17,7 @@ class ProfileMenuController extends Controller
 {
     public function index(): Response
     {
-        $items = ProfileMenuItem::orderBy('order_index')->get();
+        $items = ProfileMenuItem::orderBy('order_index', 'asc')->get();
 
         $usedHrefs = $items->pluck('href')->filter()->values()->toArray();
 
@@ -47,7 +48,7 @@ class ProfileMenuController extends Controller
 
     public function destroy(ProfileMenuItem $profileMenuItem): RedirectResponse
     {
-        $profileMenuItem->delete();
+        $profileMenuItem->forceDelete();
 
         $this->clearCache();
 
@@ -63,7 +64,7 @@ class ProfileMenuController extends Controller
         ]);
 
         foreach ($request->orders as $item) {
-            ProfileMenuItem::where('id', $item['id'])->update(['order_index' => $item['index']]);
+            ProfileMenuItem::query()->whereKey($item['id'])->update(['order_index' => $item['index']]);
         }
 
         $this->clearCache();

@@ -22,13 +22,16 @@ Route::middleware('auth')->group(function () {
     Route::get('/', fn () => Inertia::render('Home'))->name('dashboard');
     Route::get('/profile', fn () => Inertia::render('Profile/Index'))->name('profile');
 
-    // Settings: Users & Roles
-    Route::prefix('settings')->name('settings.')->group(function () {
+    // Settings: Users (admin & superadmin)
+    Route::middleware('permission:users.view')->prefix('settings')->name('settings.')->group(function () {
         Route::get('/users',           [UserController::class, 'index'])->name('users.index');
-        Route::post('/users',          [UserController::class, 'store'])->name('users.store');
-        Route::put('/users/{user}',    [UserController::class, 'update'])->name('users.update');
-        Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
+        Route::post('/users',          [UserController::class, 'store'])->middleware('permission:users.create')->name('users.store');
+        Route::put('/users/{user}',    [UserController::class, 'update'])->middleware('permission:users.edit')->name('users.update');
+        Route::delete('/users/{user}', [UserController::class, 'destroy'])->middleware('permission:users.delete')->name('users.destroy');
+    });
 
+    // Settings: Roles (superadmin only)
+    Route::middleware('role:superadmin')->prefix('settings')->name('settings.')->group(function () {
         Route::get('/roles',           [RoleController::class, 'index'])->name('roles.index');
         Route::put('/roles/{role}',    [RoleController::class, 'update'])->name('roles.update');
     });

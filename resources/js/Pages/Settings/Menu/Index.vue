@@ -45,6 +45,7 @@
                                 <th>Href</th>
                                 <th class="text-center">Urutan</th>
                                 <th class="text-center">Status</th>
+                                <th>Akses Role</th>
                                 <th class="text-end">Aksi</th>
                             </tr>
                         </thead>
@@ -74,6 +75,9 @@
                                             {{ menu.is_active ? 'Aktif' : 'Nonaktif' }}
                                         </span>
                                     </td>
+                                    <td>
+                                        <RoleBadges :roles="menu.roles" />
+                                    </td>
                                     <td class="text-end">
                                         <button class="btn btn-sm btn-outline-primary me-1" title="Edit"
                                             @click="openEdit(menu)">
@@ -87,7 +91,7 @@
                                 </tr>
 
                                 <!-- Child rows -->
-                                <tr v-for="child in menu.children" :key="child.id" class="bg-light">
+                                <tr v-for="child in menu.children" :key="child.id" class="bg-body-tertiary">
                                     <td class="ps-4">
                                         <i class="ti ti-corner-down-right text-muted me-1 fs-5"></i>
                                         {{ child.label }}
@@ -110,6 +114,9 @@
                                             {{ child.is_active ? 'Aktif' : 'Nonaktif' }}
                                         </span>
                                     </td>
+                                    <td>
+                                        <RoleBadges :roles="child.roles" />
+                                    </td>
                                     <td class="text-end">
                                         <button class="btn btn-sm btn-outline-primary me-1" title="Edit"
                                             @click="openEdit(child)">
@@ -124,7 +131,7 @@
                             </template>
 
                             <tr v-if="!menus.length">
-                                <td colspan="7" class="text-center text-muted py-4">Belum ada menu.</td>
+                                <td colspan="8" class="text-center text-muted py-4">Belum ada menu.</td>
                             </tr>
                         </tbody>
                     </table>
@@ -223,13 +230,42 @@
                         </div>
 
                         <!-- Is Active -->
-                        <div class="mb-1">
+                        <div class="mb-3">
                             <div class="form-check form-switch">
                                 <input v-model="form.is_active" class="form-check-input" type="checkbox"
                                     id="switchIsActive" />
                                 <label class="form-check-label" for="switchIsActive">
                                     Menu aktif (tampil di sidebar)
                                 </label>
+                            </div>
+                        </div>
+
+                        <!-- Akses Role -->
+                        <div class="mb-1">
+                            <label class="form-label fw-medium d-flex align-items-center gap-1">
+                                <i class="ti ti-shield-lock text-muted"></i>
+                                Akses Role
+                            </label>
+                            <div class="d-flex flex-wrap gap-3">
+                                <div v-for="role in roles" :key="role.id" class="form-check">
+                                    <input
+                                        class="form-check-input"
+                                        type="checkbox"
+                                        :id="`role-${role.id}`"
+                                        :value="role.id"
+                                        v-model="form.role_ids"
+                                    />
+                                    <label class="form-check-label text-capitalize" :for="`role-${role.id}`">
+                                        {{ role.name }}
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="form-text">
+                                Kosongkan agar menu terlihat oleh semua role.
+                                Superadmin selalu bisa melihat semua menu.
+                            </div>
+                            <div v-if="form.errors.role_ids" class="text-danger small mt-1">
+                                {{ form.errors.role_ids }}
                             </div>
                         </div>
                     </div>
@@ -322,33 +358,42 @@ import { Modal } from 'bootstrap';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import IconPicker from '@/Components/UI/IconPicker.vue';
 
+// ── Sub-component: role badges ──────────────────────────────────
+const RoleBadges = {
+    props: { roles: Array },
+    template: `
+        <span v-if="roles?.length" class="d-flex flex-wrap gap-1">
+            <span v-for="r in roles" :key="r.id"
+                class="badge rounded-pill text-bg-warning text-capitalize">{{ r.name }}</span>
+        </span>
+        <span v-else class="text-muted small">Semua</span>
+    `,
+};
+
 const props = defineProps({
     menus:           { type: Array, required: true },
     availableRoutes: { type: Array, required: true },
     usedHrefs:       { type: Array, required: true },
+    roles:           { type: Array, required: true },
 });
 
-// Only root items of type 'item' can be parents
 const rootMenuItems = computed(() =>
     props.menus.filter(m => m.type === 'item')
 );
 
-// Flat unique list of all existing labels (root + children) for autocomplete
 const allMenuLabels = computed(() => {
     const labels = new Set();
     for (const menu of props.menus) {
         labels.add(menu.label);
-        for (const child of menu.children ?? []) {
-            labels.add(child.label);
-        }
+        for (const child of menu.children ?? []) labels.add(child.label);
     }
     return [...labels];
 });
 
 // ─── Form Modal ────────────────────────────────────────────────
-const isEditing = ref(false);
-const editingId = ref(null);
-const originalHref = ref(null); // href milik item yang sedang diedit
+const isEditing   = ref(false);
+const editingId   = ref(null);
+const originalHref = ref(null);
 
 const form = useForm({
     parent_id:   null,
@@ -358,6 +403,7 @@ const form = useForm({
     href:        '',
     order_index: 0,
     is_active:   true,
+    role_ids:    [],
 });
 
 function resetForm() {
@@ -368,11 +414,10 @@ function resetForm() {
     form.href        = '';
     form.order_index = 0;
     form.is_active   = true;
+    form.role_ids    = [];
     form.clearErrors();
 }
 
-// Route GET yang belum dipakai menu lain.
-// Saat edit: sertakan href milik item sendiri agar tetap bisa dipilih.
 const selectableRoutes = computed(() => {
     const used = new Set(props.usedHrefs);
     if (originalHref.value) used.delete(originalHref.value);
@@ -380,8 +425,8 @@ const selectableRoutes = computed(() => {
 });
 
 function openCreate() {
-    isEditing.value   = false;
-    editingId.value   = null;
+    isEditing.value    = false;
+    editingId.value    = null;
     originalHref.value = null;
     resetForm();
     getModal('menuModal').show();
@@ -398,6 +443,7 @@ function openEdit(menu) {
     form.href          = menu.href ?? '';
     form.order_index   = menu.order_index;
     form.is_active     = menu.is_active;
+    form.role_ids      = (menu.roles ?? []).map(r => r.id);
     form.clearErrors();
     getModal('menuModal').show();
 }
@@ -413,16 +459,13 @@ function submitForm() {
     } else {
         form.post('/settings/menus', {
             ...options,
-            onSuccess: () => {
-                getModal('menuModal').hide();
-                resetForm();
-            },
+            onSuccess: () => { getModal('menuModal').hide(); resetForm(); },
         });
     }
 }
 
 // ─── Delete Modal ──────────────────────────────────────────────
-const deleteTarget    = ref(null);
+const deleteTarget     = ref(null);
 const deleteProcessing = ref(false);
 
 function confirmDelete(menu) {
@@ -435,20 +478,15 @@ function doDelete() {
     deleteProcessing.value = true;
     router.delete(`/settings/menus/${deleteTarget.value.id}`, {
         preserveScroll: true,
-        onFinish: () => {
-            deleteProcessing.value = false;
-            getModal('deleteModal').hide();
-        },
+        onFinish: () => { deleteProcessing.value = false; getModal('deleteModal').hide(); },
     });
 }
 
 // ─── Destroy All Modal ─────────────────────────────────────────
-const DESTROY_ALL_KEYWORD  = 'hapus menu';
-const destroyAllConfirm    = ref('');
-const destroyAllProcessing = ref(false);
-const destroyAllConfirmValid = computed(
-    () => destroyAllConfirm.value === DESTROY_ALL_KEYWORD
-);
+const DESTROY_ALL_KEYWORD    = 'hapus menu';
+const destroyAllConfirm      = ref('');
+const destroyAllProcessing   = ref(false);
+const destroyAllConfirmValid = computed(() => destroyAllConfirm.value === DESTROY_ALL_KEYWORD);
 
 function openDestroyAll() {
     destroyAllConfirm.value = '';
@@ -460,14 +498,10 @@ function doDestroyAll() {
     destroyAllProcessing.value = true;
     router.delete('/settings/menus/destroy-all', {
         preserveScroll: true,
-        onFinish: () => {
-            destroyAllProcessing.value = false;
-            getModal('destroyAllModal').hide();
-        },
+        onFinish: () => { destroyAllProcessing.value = false; getModal('destroyAllModal').hide(); },
     });
 }
 
-// ─── Helper ────────────────────────────────────────────────────
 function getModal(id) {
     return Modal.getOrCreateInstance(document.getElementById(id));
 }

@@ -8,16 +8,21 @@ use App\Http\Requests\Settings\UpdateMenuRequest;
 use App\Models\Menu;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 use Inertia\Response;
+use Spatie\Permission\Models\Role;
 
 class MenuController extends Controller
 {
     public function index(): Response
     {
-        $menus = Menu::with(['children' => fn ($q) => $q->orderBy('order_index')])
-            ->roots()
+        $menus = Menu::with([
+            'children' => fn ($q) => $q->orderBy('order_index')->with('roles:id,name'),
+            'roles:id,name',
+        ])
+            ->whereNull('parent_id')
             ->orderBy('order_index')
             ->get();
 
@@ -31,28 +36,18 @@ class MenuController extends Controller
             'menus'           => $menus,
             'availableRoutes' => $this->getGetRoutes(),
             'usedHrefs'       => $usedHrefs,
+            'roles'           => Role::orderBy('name')->get(['id', 'name']),
         ]);
-    }
-
-    private function getGetRoutes(): array
-    {
-        return collect(app('router')->getRoutes()->getRoutesByMethod()['GET'] ?? [])
-            ->filter(fn ($route) =>
-                !str_contains($route->uri(), '{') &&
-                !str_starts_with($route->uri(), '_ignition') &&
-                !str_starts_with($route->uri(), 'sanctum') &&
-                $route->uri() !== 'up'
-            )
-            ->map(fn ($route) => '/' . ltrim($route->uri(), '/'))
-            ->unique()
-            ->sort()
-            ->values()
-            ->toArray();
     }
 
     public function store(StoreMenuRequest $request): RedirectResponse
     {
-        Menu::create($request->validated());
+        $data    = $request->validated();
+        $roleIds = $data['role_ids'] ?? [];
+        unset($data['role_ids']);
+
+        $menu = Menu::create($data);
+        $menu->roles()->sync($roleIds);
 
         $this->clearMenuCache();
 
@@ -61,7 +56,12 @@ class MenuController extends Controller
 
     public function update(UpdateMenuRequest $request, Menu $menu): RedirectResponse
     {
-        $menu->update($request->validated());
+        $data    = $request->validated();
+        $roleIds = $data['role_ids'] ?? [];
+        unset($data['role_ids']);
+
+        $menu->update($data);
+        $menu->roles()->sync($roleIds);
 
         $this->clearMenuCache();
 
@@ -70,10 +70,8 @@ class MenuController extends Controller
 
     public function destroy(Menu $menu): RedirectResponse
     {
-        // Children otomatis ter-delete karena SET NULL on parent_id,
-        // tapi kita hapus manual agar bersih
         $menu->children()->delete();
-        $menu->delete();
+        Menu::query()->whereKey($menu->id)->delete();
 
         $this->clearMenuCache();
 
@@ -98,12 +96,31 @@ class MenuController extends Controller
         ]);
 
         foreach ($request->orders as $item) {
-            Menu::where('id', $item['id'])->update(['order_index' => $item['index']]);
+            Menu::query()->whereKey($item['id'])->update(['order_index' => $item['index']]);
         }
 
         $this->clearMenuCache();
 
         return back()->with('success', 'Urutan menu berhasil disimpan.');
+    }
+
+    private function getGetRoutes(): array
+    {
+        /** @var Router $router */
+        $router = app('router');
+
+        return collect($router->getRoutes()->getRoutesByMethod()['GET'] ?? [])
+            ->filter(fn ($route) =>
+                !str_contains($route->uri(), '{') &&
+                !str_starts_with($route->uri(), '_ignition') &&
+                !str_starts_with($route->uri(), 'sanctum') &&
+                $route->uri() !== 'up'
+            )
+            ->map(fn ($route) => '/' . ltrim($route->uri(), '/'))
+            ->unique()
+            ->sort()
+            ->values()
+            ->toArray();
     }
 
     private function clearMenuCache(): void

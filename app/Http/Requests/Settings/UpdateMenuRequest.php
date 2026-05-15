@@ -31,6 +31,8 @@ class UpdateMenuRequest extends FormRequest
             'href'        => ['nullable', 'string', 'max:255', Rule::unique('menus', 'href')->ignore($this->route('menu'))],
             'order_index' => ['sometimes', 'integer', 'min:0'],
             'is_active'   => ['boolean'],
+            'role_ids'    => ['nullable', 'array'],
+            'role_ids.*'  => ['integer', 'exists:roles,id'],
         ];
     }
 }
