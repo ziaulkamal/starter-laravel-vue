@@ -11,49 +11,30 @@
             </div>
 
             <form @submit.prevent="submit">
-                <div class="mb-3">
-                    <label for="email" class="form-label">Email</label>
-                    <input
-                        id="email"
-                        v-model="form.email"
-                        type="email"
-                        class="form-control"
-                        :class="{ 'is-invalid': form.errors.email }"
-                        autocomplete="email"
-                        autofocus
-                    />
-                    <div v-if="form.errors.email" class="invalid-feedback">
-                        {{ form.errors.email }}
-                    </div>
-                </div>
+                <AppInput
+                    v-model="form.email"
+                    type="email"
+                    label="Email"
+                    :error="form.errors.email"
+                    autocomplete="email"
+                    autofocus
+                    class="mb-3"
+                />
 
-                <div class="mb-4">
-                    <label for="password" class="form-label">Password</label>
-                    <input
-                        id="password"
-                        v-model="form.password"
-                        type="password"
-                        class="form-control"
-                        :class="{ 'is-invalid': form.errors.password }"
-                        autocomplete="current-password"
-                    />
-                    <div v-if="form.errors.password" class="invalid-feedback">
-                        {{ form.errors.password }}
-                    </div>
-                </div>
+                <AppInput
+                    v-model="form.password"
+                    type="password"
+                    label="Password"
+                    :error="form.errors.password"
+                    autocomplete="current-password"
+                    class="mb-4"
+                />
 
                 <div class="d-flex align-items-center justify-content-between mb-4">
-                    <div class="form-check">
-                        <input
-                            id="remember"
-                            v-model="form.remember"
-                            class="form-check-input primary"
-                            type="checkbox"
-                        />
-                        <label class="form-check-label text-dark" for="remember">
-                            Remember this Device
-                        </label>
-                    </div>
+                    <AppCheckbox
+                        v-model="form.remember"
+                        label="Remember this Device"
+                    />
                     <Link href="/forgot-password" class="text-primary fw-medium">
                         Forgot Password?
                     </Link>
@@ -82,6 +63,7 @@ import { Link, useForm } from '@inertiajs/vue3';
 import AuthLayout from '@/Layouts/AuthLayout.vue';
 import AuthCard from '@/Components/Auth/AuthCard.vue';
 import SocialButtons from '@/Components/Auth/SocialButtons.vue';
+import { AppInput, AppCheckbox } from '@/Components/UI/Form';
 
 const form = useForm({
     email: '',

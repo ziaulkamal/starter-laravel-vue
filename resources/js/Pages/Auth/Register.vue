@@ -11,66 +11,41 @@
             </div>
 
             <form @submit.prevent="submit">
-                <div class="mb-3">
-                    <label for="name" class="form-label">Full Name</label>
-                    <input
-                        id="name"
-                        v-model="form.name"
-                        type="text"
-                        class="form-control"
-                        :class="{ 'is-invalid': form.errors.name }"
-                        autocomplete="name"
-                        autofocus
-                    />
-                    <div v-if="form.errors.name" class="invalid-feedback">
-                        {{ form.errors.name }}
-                    </div>
-                </div>
+                <AppInput
+                    v-model="form.name"
+                    label="Full Name"
+                    :error="form.errors.name"
+                    autocomplete="name"
+                    autofocus
+                    class="mb-3"
+                />
 
-                <div class="mb-3">
-                    <label for="email" class="form-label">Email</label>
-                    <input
-                        id="email"
-                        v-model="form.email"
-                        type="email"
-                        class="form-control"
-                        :class="{ 'is-invalid': form.errors.email }"
-                        autocomplete="email"
-                    />
-                    <div v-if="form.errors.email" class="invalid-feedback">
-                        {{ form.errors.email }}
-                    </div>
-                </div>
+                <AppInput
+                    v-model="form.email"
+                    type="email"
+                    label="Email"
+                    :error="form.errors.email"
+                    autocomplete="email"
+                    class="mb-3"
+                />
 
-                <div class="mb-3">
-                    <label for="password" class="form-label">Password</label>
-                    <input
-                        id="password"
-                        v-model="form.password"
-                        type="password"
-                        class="form-control"
-                        :class="{ 'is-invalid': form.errors.password }"
-                        autocomplete="new-password"
-                    />
-                    <div v-if="form.errors.password" class="invalid-feedback">
-                        {{ form.errors.password }}
-                    </div>
-                </div>
+                <AppInput
+                    v-model="form.password"
+                    type="password"
+                    label="Password"
+                    :error="form.errors.password"
+                    autocomplete="new-password"
+                    class="mb-3"
+                />
 
-                <div class="mb-4">
-                    <label for="password_confirmation" class="form-label">Confirm Password</label>
-                    <input
-                        id="password_confirmation"
-                        v-model="form.password_confirmation"
-                        type="password"
-                        class="form-control"
-                        :class="{ 'is-invalid': form.errors.password_confirmation }"
-                        autocomplete="new-password"
-                    />
-                    <div v-if="form.errors.password_confirmation" class="invalid-feedback">
-                        {{ form.errors.password_confirmation }}
-                    </div>
-                </div>
+                <AppInput
+                    v-model="form.password_confirmation"
+                    type="password"
+                    label="Confirm Password"
+                    :error="form.errors.password_confirmation"
+                    autocomplete="new-password"
+                    class="mb-4"
+                />
 
                 <button
                     type="submit"
@@ -95,6 +70,7 @@ import { Link, useForm } from '@inertiajs/vue3';
 import AuthLayout from '@/Layouts/AuthLayout.vue';
 import AuthCard from '@/Components/Auth/AuthCard.vue';
 import SocialButtons from '@/Components/Auth/SocialButtons.vue';
+import { AppInput } from '@/Components/UI/Form';
 
 const form = useForm({
     name: '',
