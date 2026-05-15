@@ -31,7 +31,12 @@ class HandleInertiaRequests extends Middleware
             'appName' => config('app.name'),
 
             'auth' => [
-                'user'        => $user?->only('id', 'name', 'email'),
+                'user' => $user ? [
+                    'id'        => $user->id,
+                    'name'      => $user->name,
+                    'email'     => $user->email,
+                    'is_active' => (bool) $user->is_active,
+                ] : null,
                 'permissions' => $userPermissions,
                 'roles'       => $userRoles,
             ],

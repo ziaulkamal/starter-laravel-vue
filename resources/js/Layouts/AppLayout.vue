@@ -51,6 +51,8 @@
     </div>
 
     <div class="dark-transparent sidebartoggler" @click="closeMobileSidebar"></div>
+
+    <InactiveOverlay v-if="!isActive" @logout="logout" />
 </template>
 
 <script setup>
@@ -60,6 +62,7 @@ import defaultAvatar from '@images/profile/user-1.jpg';
 import AppSidebar from '@/Components/Sidebar/AppSidebar.vue';
 import AppHeader from '@/Components/Header/AppHeader.vue';
 import AppBreadcrumb from '@/Components/UI/AppBreadcrumb.vue';
+import InactiveOverlay from '@/Components/UI/InactiveOverlay.vue';
 import { useSidebar } from '@/Composables/useSidebar';
 
 defineProps({
@@ -73,6 +76,7 @@ const page = usePage();
 const userName = page.props.auth?.user?.name ?? 'User';
 const userRole = page.props.auth?.user?.role ?? '';
 const userAvatar = page.props.auth?.user?.avatar ?? defaultAvatar;
+const isActive = computed(() => page.props.auth?.user?.is_active !== false);
 
 const appName = page.props.appName ?? document.title;
 
