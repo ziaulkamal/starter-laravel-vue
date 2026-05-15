@@ -26,7 +26,8 @@ class HandleInertiaRequests extends Middleware
 
             'auth' => [
                 'user'        => $request->user()?->only('id', 'name', 'email'),
-                'permissions' => null, // TODO: isi setelah package permission terpasang
+                'permissions' => $request->user()
+                    ?->getAllPermissions()->pluck('name')->toArray(),
             ],
 
             'flash' => [
