@@ -37,6 +37,7 @@
                     inputmode="numeric"
                     :error="form.errors.phone"
                     class="mb-3"
+                    @keydown="blockNonNumeric"
                     @blur="handlePhoneBlur"
                 />
 
@@ -116,7 +117,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { Link, useForm } from '@inertiajs/vue3';
 import { Toast } from 'bootstrap';
 import AuthLayout from '@/Layouts/AuthLayout.vue';
@@ -130,6 +131,21 @@ onMounted(() => {
 });
 
 const phoneDisplay = ref('');
+
+// Strip non-numeric dari paste / autocomplete
+watch(phoneDisplay, (val) => {
+    const clean = val.replace(/\D/g, '');
+    if (clean !== val) phoneDisplay.value = clean;
+});
+
+// Blokir karakter non-angka di level keyboard
+function blockNonNumeric(e) {
+    const allowed = ['Backspace', 'Delete', 'Tab', 'Escape', 'Enter',
+                     'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'];
+    if (allowed.includes(e.key)) return;
+    if ((e.ctrlKey || e.metaKey) && ['a', 'c', 'v', 'x', 'z'].includes(e.key.toLowerCase())) return;
+    if (!/^\d$/.test(e.key)) e.preventDefault();
+}
 
 const form = useForm({
     name: '',

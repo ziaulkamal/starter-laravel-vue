@@ -20,6 +20,7 @@ class NotificationController extends Controller
                 'id'         => $n->id,
                 'data'       => $n->data,
                 'created_at' => $n->created_at->diffForHumans(),
+                'created_at_ts' => $n->created_at->timestamp,
             ]);
 
         return response()->json([

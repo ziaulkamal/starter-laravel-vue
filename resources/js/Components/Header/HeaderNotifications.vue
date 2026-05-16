@@ -37,7 +37,14 @@
                         <div class="flex-grow-1 overflow-hidden">
                             <p class="mb-1 fw-semibold text-truncate small">
                                 Pendaftaran Baru
-                                <span class="badge text-bg-primary ms-1" style="font-size: 0.55rem">Baru</span>
+                                <span v-if="isOlderThan24h(item)"
+                                      class="badge text-bg-warning ms-1" style="font-size: 0.55rem">
+                                    Butuh Peninjauan
+                                </span>
+                                <span v-else
+                                      class="badge text-bg-primary ms-1" style="font-size: 0.55rem">
+                                    Baru
+                                </span>
                             </p>
                             <p class="mb-1 text-muted small lh-sm">
                                 <strong>{{ item.data.name }}</strong> ({{ item.data.email }})<br>
@@ -86,6 +93,10 @@ async function fetchNotifications() {
     } catch {
         // silent — network error during poll is non-critical
     }
+}
+
+function isOlderThan24h(item) {
+    return (Date.now() / 1000 - item.created_at_ts) > 86400;
 }
 
 async function markRead(item) {
