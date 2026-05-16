@@ -70,28 +70,15 @@
                 :error="form.errors.kapasitas"
                 class="mb-3"
             />
-            <div class="row g-3">
-                <div class="col-6">
-                    <AppInput
-                        v-model="form.lat"
-                        type="number"
-                        label="Latitude"
-                        placeholder="contoh: 3.8634"
-                        hint="-90 sampai 90"
-                        :error="form.errors.lat"
-                    />
-                </div>
-                <div class="col-6">
-                    <AppInput
-                        v-model="form.lng"
-                        type="number"
-                        label="Longitude"
-                        placeholder="contoh: 96.7234"
-                        hint="-180 sampai 180"
-                        :error="form.errors.lng"
-                    />
-                </div>
-            </div>
+            <AppMapPicker
+                :lat="form.lat"
+                :lng="form.lng"
+                label="Lokasi Venue"
+                hint="Klik pada peta atau drag pin untuk menentukan koordinat"
+                :error="form.errors.lat ?? form.errors.lng"
+                @update:lat="(v: number | null) => form.lat = v ?? ''"
+                @update:lng="(v: number | null) => form.lng = v ?? ''"
+            />
         </AppFormModal>
 
         <!-- Delete Single Modal -->
@@ -125,6 +112,7 @@ import AppFlash from '@/Components/UI/AppFlash.vue';
 import AppFormModal from '@/Components/UI/AppFormModal.vue';
 import AppDeleteModal from '@/Components/UI/AppDeleteModal.vue';
 import AppInput from '@/Components/UI/Form/AppInput.vue';
+import AppMapPicker from '@/Components/UI/Form/AppMapPicker.vue';
 import { useBootstrapModal } from '@/composables/useBootstrapModal';
 import type { TableColumn } from '@/Components/UI/AppTable.vue';
 
