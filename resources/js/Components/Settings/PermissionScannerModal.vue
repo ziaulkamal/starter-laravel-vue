@@ -152,6 +152,29 @@
                         Sync selesai — reload halaman untuk melihat permission baru
                     </div>
 
+                    <!-- Hard Reset: step 1 — trigger -->
+                    <button v-if="!confirmingReset"
+                            type="button" class="btn btn-link text-danger ms-0 me-auto px-0"
+                            title="Hapus semua permission dari database lalu scan ulang dari nol"
+                            :disabled="state === 'scanning' || state === 'syncing'"
+                            @click="confirmingReset = true">
+                        <i class="ti ti-refresh-alert me-1"></i>Hard Reset
+                    </button>
+
+                    <!-- Hard Reset: step 2 — confirm inline -->
+                    <div v-else class="d-flex align-items-center gap-2 me-auto">
+                        <span class="small text-danger fw-medium">
+                            <i class="ti ti-alert-triangle me-1"></i>
+                            Hapus <strong>semua permission</strong> dari DB? Role akan kehilangan akses.
+                        </span>
+                        <button type="button" class="btn btn-danger btn-sm" @click="hardReset">
+                            <i class="ti ti-trash me-1"></i>Ya, Hapus Semua
+                        </button>
+                        <button type="button" class="btn btn-light btn-sm" @click="confirmingReset = false">
+                            Batal
+                        </button>
+                    </div>
+
                     <button type="button" class="btn btn-light" data-bs-dismiss="modal">Tutup</button>
 
                     <button v-if="state === 'idle' || state === 'done'"
@@ -210,13 +233,14 @@ interface ModuleData {
     some_exist: boolean;
 }
 
-const state        = ref<ScanState>('idle');
-const terminalLines = ref<string[]>([]);
-const terminalEl   = ref<HTMLElement | null>(null);
-const modules      = ref<ModuleData[]>([]);
-const selectedPerms = ref<string[]>([]);
-const showIgnored  = ref(false);
-const ignoredList  = ref<string[]>(JSON.parse(localStorage.getItem(IGNORED_KEY) ?? '[]'));
+const state           = ref<ScanState>('idle');
+const terminalLines   = ref<string[]>([]);
+const terminalEl      = ref<HTMLElement | null>(null);
+const modules         = ref<ModuleData[]>([]);
+const selectedPerms   = ref<string[]>([]);
+const showIgnored     = ref(false);
+const confirmingReset = ref(false);
+const ignoredList     = ref<string[]>(JSON.parse(localStorage.getItem(IGNORED_KEY) ?? '[]'));
 
 // Modules excluding ignored ones
 const activeModules  = computed(() => modules.value.filter(m => !ignoredList.value.includes(m.name)));
@@ -329,9 +353,12 @@ async function startScan() {
 
         state.value = 'results';
 
-    } catch {
+    } catch (err: any) {
+        const msg = err?.response?.status
+            ? `HTTP ${err.response.status} — ${err.response?.data?.message ?? 'server error'}`
+            : 'Tidak dapat terhubung ke server';
         await addLine(`${C.gray('│')}`, 20);
-        await addLine(`${C.gray('└')} ${C.red('✗ Scan gagal — cek koneksi atau coba lagi.')}`, 0);
+        await addLine(`${C.gray('└')} ${C.red('✗ Scan gagal: ' + msg)}`, 0);
         state.value = 'idle';
     }
 }
@@ -383,6 +410,45 @@ function unignoreModule(name: string) {
 
 function persist() {
     localStorage.setItem(IGNORED_KEY, JSON.stringify(ignoredList.value));
+}
+
+async function hardReset() {
+    confirmingReset.value = false;
+    state.value           = 'scanning';
+    terminalLines.value   = [];
+    modules.value         = [];
+    selectedPerms.value   = [];
+    showIgnored.value     = false;
+
+    await addLine(`${C.green('❯')} ${C.white('permission:reset --force')}`, 0);
+    await addLine('', 0);
+    await addLine(`${C.gray('┌')} ${C.red('Hard Reset')} ${C.gray('──────────────────────────────────────')}`, 40);
+    await addLine(`${C.gray('│')}`, 20);
+    await addLine(`${C.gray('│')}  ${C.gray('Menghapus semua permission dari database...')}`, 80);
+
+    try {
+        const res = await axios.delete('/settings/permissions/reset');
+        const deleted: number = res.data.deleted;
+
+        await addLine(`${C.gray('│')}  ${C.red('✗')} ${C.white(String(deleted))} permission dihapus`, 80);
+        await addLine(`${C.gray('│')}  ${C.red('✗')} Semua role kehilangan permission`, 60);
+        await addLine(`${C.gray('│')}`, 20);
+        await addLine(`${C.gray('│')}  ${C.gray('Membersihkan daftar diabaikan...')}`, 60);
+
+        ignoredList.value = [];
+        localStorage.removeItem(IGNORED_KEY);
+
+        await addLine(`${C.gray('│')}  ${C.green('✓')} Cache lokal dibersihkan`, 60);
+        await addLine(`${C.gray('│')}`, 20);
+        await addLine(`${C.gray('└')} ${C.green('Reset selesai')} ${C.gray('· Klik')} ${C.blue('Mulai Scan')} ${C.gray('untuk scan ulang dari nol.')}`, 60);
+
+        state.value = 'idle';
+        emit('synced');
+    } catch {
+        await addLine(`${C.gray('│')}`, 20);
+        await addLine(`${C.gray('└')} ${C.red('✗ Reset gagal — server error.')}`, 0);
+        state.value = 'idle';
+    }
 }
 
 // ── Bulk select ───────────────────────────────────────────────────

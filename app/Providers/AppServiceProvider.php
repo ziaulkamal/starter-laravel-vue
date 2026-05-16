@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Socialite\SsoProvider;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 use Laravel\Socialite\Facades\Socialite;
@@ -17,6 +18,9 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        // Superadmin bypasses all permission gates
+        Gate::before(fn ($user) => $user->hasRole('superadmin') ? true : null);
+
         Carbon::setLocale('id');
         Password::defaults(fn () => Password::min(8)->mixedCase()->numbers()->symbols());
 

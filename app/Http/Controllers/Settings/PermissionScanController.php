@@ -68,9 +68,20 @@ class PermissionScanController extends Controller
 
         return response()->json([
             'modules'      => array_values($modules),
-            'total_routes' => count(Route::getRoutes()),
+            'total_routes' => count(Route::getRoutes()->getRoutes()),
             'scanned_at'   => now()->format('d M Y H:i:s'),
         ]);
+    }
+
+    public function reset(): JsonResponse
+    {
+        $count = Permission::count();
+
+        // Detach from all roles first, then delete
+        Permission::all()->each(fn (Permission $p) => $p->roles()->detach());
+        Permission::query()->delete();
+
+        return response()->json(['deleted' => $count]);
     }
 
     public function sync(Request $request): JsonResponse
@@ -80,13 +91,19 @@ class PermissionScanController extends Controller
             'permissions.*' => ['required', 'string', 'max:100'],
         ]);
 
+        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+
         $created = [];
         foreach ($data['permissions'] as $name) {
-            if (! Permission::where('name', $name)->exists()) {
-                Permission::create(['name' => $name, 'guard_name' => 'web']);
+            $permission = Permission::firstOrCreate(
+                ['name' => $name, 'guard_name' => 'web']
+            );
+            if ($permission->wasRecentlyCreated) {
                 $created[] = $name;
             }
         }
+
+        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
         return response()->json([
             'created' => $created,

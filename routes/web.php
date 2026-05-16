@@ -55,6 +55,7 @@ Route::middleware('auth')->group(function () {
         Route::put('/roles/{role}',               [RoleController::class, 'update'])->name('roles.update');
         Route::post('/permissions/scan',          [PermissionScanController::class, 'scan'])->name('permissions.scan');
         Route::post('/permissions/sync',          [PermissionScanController::class, 'sync'])->name('permissions.sync');
+        Route::delete('/permissions/reset',       [PermissionScanController::class, 'reset'])->name('permissions.reset');
 
         // Pending registrations approval
         Route::get('/pending-registrations', [PendingRegistrationController::class, 'index'])->name('pending-registrations.index');
