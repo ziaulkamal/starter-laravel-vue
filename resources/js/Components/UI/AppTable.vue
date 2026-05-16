@@ -35,7 +35,7 @@ export interface TableActions {
 </script>
 
 <script setup lang="ts">
-import { computed, reactive, ref, useSlots, watch } from 'vue';
+import { computed, reactive, ref, useSlots, watch, watchEffect } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 // import type { TableColumn, TableActions } from './AppTable.vue';
 
@@ -75,6 +75,7 @@ interface Props {
     perPageOptions?: number[];
     emptyText?: string;
     caption?: string;
+    selectable?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -84,12 +85,14 @@ const props = withDefaults(defineProps<Props>(), {
     showSearch: true,
     showPagination: true,
     perPageOptions: () => [10, 25, 50, 100],
+    selectable: false,
 });
 
 const emit = defineEmits<{
     view: [row: Record<string, unknown>, index: number];
     edit: [row: Record<string, unknown>, index: number];
     delete: [row: Record<string, unknown>, index: number];
+    'update:selected': [rows: Record<string, unknown>[]];
 }>();
 
 const slots = useSlots();
@@ -212,6 +215,10 @@ const showingText = computed(() => {
     return `${from}–${to} dari ${total} data`;
 });
 
+const hasSensitive = computed(() =>
+    internalColumns.value.some(col => col.type === 'sensitive')
+);
+
 // ─── Actions ─────────────────────────────────────────────────────────────────
 
 const resolvedActions = computed<Required<TableActions>>(() => {
@@ -246,6 +253,7 @@ const tableClasses = computed(() => [
 const totalColspan = computed(
     () =>
         activeColumns.value.length +
+        (props.selectable ? 1 : 0) +
         (props.showRowNumbers ? 1 : 0) +
         (hasActions.value ? 1 : 0),
 );
@@ -315,6 +323,58 @@ function toggleReveal(rowIdx: number, colKey: string) {
     revealedCells.has(k) ? revealedCells.delete(k) : revealedCells.add(k);
 }
 
+// ─── Selection ────────────────────────────────────────────────────────────────
+
+const selectedIds       = reactive(new Set<string>());
+const headerCheckboxRef = ref<HTMLInputElement | null>(null);
+
+function rowKey(row: Record<string, unknown>): string {
+    return String(row.id ?? JSON.stringify(row));
+}
+
+function isRowSelected(row: Record<string, unknown>): boolean {
+    return selectedIds.has(rowKey(row));
+}
+
+const allPageSelected = computed(() =>
+    paginatedData.value.length > 0 &&
+    paginatedData.value.every(row => selectedIds.has(rowKey(row)))
+);
+
+const somePageSelected = computed(() =>
+    !allPageSelected.value && paginatedData.value.some(row => selectedIds.has(rowKey(row)))
+);
+
+function toggleRow(row: Record<string, unknown>): void {
+    const k = rowKey(row);
+    selectedIds.has(k) ? selectedIds.delete(k) : selectedIds.add(k);
+    emitSelected();
+}
+
+function toggleAll(): void {
+    if (allPageSelected.value) {
+        paginatedData.value.forEach(row => selectedIds.delete(rowKey(row)));
+    } else {
+        paginatedData.value.forEach(row => selectedIds.add(rowKey(row)));
+    }
+    emitSelected();
+}
+
+function emitSelected(): void {
+    emit('update:selected', props.data.filter(row => selectedIds.has(rowKey(row))));
+}
+
+watchEffect(() => {
+    if (headerCheckboxRef.value) {
+        headerCheckboxRef.value.indeterminate = somePageSelected.value;
+    }
+});
+
+watch(() => props.data, () => {
+    selectedIds.clear();
+    emitSelected();
+});
+
 // ─── Custom slots ─────────────────────────────────────────────────────────────
 
 function hasCellSlot(key: string): boolean {
@@ -346,6 +406,12 @@ function hasCellSlot(key: string): boolean {
                 </div>
 
                 <slot name="controls-left" />
+                <span
+                    v-if="selectable && selectedIds.size > 0"
+                    class="badge bg-primary-subtle text-primary rounded-pill px-2 small"
+                >
+                    {{ selectedIds.size }} terpilih
+                </span>
             </div>
 
             <div class="d-flex align-items-center gap-2">
@@ -413,6 +479,15 @@ function hasCellSlot(key: string): boolean {
 
                 <thead class="app-thead">
                     <tr>
+                        <th v-if="selectable" class="app-th-select" scope="col">
+                            <input
+                                ref="headerCheckboxRef"
+                                type="checkbox"
+                                class="form-check-input mt-0"
+                                :checked="allPageSelected"
+                                @change="toggleAll"
+                            />
+                        </th>
                         <th v-if="showRowNumbers" class="text-center app-th-no" scope="col">#</th>
                         <th
                             v-for="col in activeColumns"
@@ -448,7 +523,17 @@ function hasCellSlot(key: string): boolean {
                         v-for="(row, rowIdx) in paginatedData"
                         :key="pageStart + rowIdx"
                         class="align-middle"
+                        :class="{ 'table-active': selectable && isRowSelected(row) }"
                     >
+                        <!-- Select checkbox -->
+                        <td v-if="selectable" class="app-th-select">
+                            <input
+                                type="checkbox"
+                                class="form-check-input mt-0"
+                                :checked="isRowSelected(row)"
+                                @change="toggleRow(row)"
+                            />
+                        </td>
                         <!-- Row number -->
                         <td v-if="showRowNumbers" class="text-center text-muted small app-th-no">
                             {{ pageStart + rowIdx + 1 }}
@@ -580,38 +665,97 @@ function hasCellSlot(key: string): boolean {
 
         <!-- Pagination footer -->
         <div
-            v-if="showPagination !== false && data.length > 0"
-            class="d-flex align-items-center justify-content-between flex-wrap gap-2 mt-3"
+            v-if="showPagination !== false && totalPages > 1"
+            class="app-pagination-bar d-flex align-items-center justify-content-end flex-wrap gap-3"
         >
-            <!-- Showing count -->
-            <!-- <span class="text-muted small">
-                {{ filteredData.length > 0 ? `Menampilkan ${showingText}` : 'Tidak ada hasil' }}
-            </span> -->
-
-            <!-- Page navigation -->
+            <!-- Navigasi halaman -->
             <nav v-if="totalPages > 1" aria-label="Navigasi halaman">
-                <ul class="pagination pagination-sm mb-0">
-                    <li class="page-item" :class="{ disabled: currentPage === 1 }">
-                        <button class="page-link" :disabled="currentPage === 1" @click="currentPage--" aria-label="Sebelumnya">
+                <ul class="app-pagination mb-0">
+
+                    <!-- First -->
+                    <li :class="['app-page-item', { disabled: currentPage === 1 }]">
+                        <button
+                            class="app-page-btn"
+                            :disabled="currentPage === 1"
+                            title="Halaman pertama"
+                            @click="currentPage = 1"
+                        >
+                            <i class="ti ti-chevrons-left"></i>
+                        </button>
+                    </li>
+
+                    <!-- Prev -->
+                    <li :class="['app-page-item', { disabled: currentPage === 1 }]">
+                        <button
+                            class="app-page-btn"
+                            :disabled="currentPage === 1"
+                            title="Sebelumnya"
+                            @click="currentPage--"
+                        >
                             <i class="ti ti-chevron-left"></i>
                         </button>
                     </li>
+
+                    <!-- Page numbers -->
                     <li
                         v-for="(p, i) in displayPages"
                         :key="i"
-                        class="page-item"
-                        :class="{ active: p === currentPage, disabled: p === null }"
+                        :class="['app-page-item', { active: p === currentPage }]"
                     >
-                        <button v-if="p !== null" class="page-link" @click="currentPage = p">{{ p }}</button>
-                        <span v-else class="page-link">…</span>
+                        <button v-if="p !== null" class="app-page-btn" @click="currentPage = p">
+                            {{ p }}
+                        </button>
+                        <span v-else class="app-page-ellipsis">···</span>
                     </li>
-                    <li class="page-item" :class="{ disabled: currentPage === totalPages }">
-                        <button class="page-link" :disabled="currentPage === totalPages" @click="currentPage++" aria-label="Berikutnya">
+
+                    <!-- Next -->
+                    <li :class="['app-page-item', { disabled: currentPage === totalPages }]">
+                        <button
+                            class="app-page-btn"
+                            :disabled="currentPage === totalPages"
+                            title="Berikutnya"
+                            @click="currentPage++"
+                        >
                             <i class="ti ti-chevron-right"></i>
                         </button>
                     </li>
+
+                    <!-- Last -->
+                    <li :class="['app-page-item', { disabled: currentPage === totalPages }]">
+                        <button
+                            class="app-page-btn"
+                            :disabled="currentPage === totalPages"
+                            title="Halaman terakhir"
+                            @click="currentPage = totalPages"
+                        >
+                            <i class="ti ti-chevrons-right"></i>
+                        </button>
+                    </li>
+
                 </ul>
             </nav>
+        </div>
+
+        <!-- Info bar -->
+        <div
+            v-if="data.length > 0"
+            class="app-info-bar"
+            :class="hasSensitive ? 'justify-content-between' : 'justify-content-center'"
+        >
+            <!-- <span class="app-info-text">
+                Menampilkan
+                <strong>{{ filteredData.length }}</strong>
+                dari
+                <strong>{{ data.length }}</strong>
+                data
+                <span v-if="filteredData.length !== data.length" class="app-info-filter">
+                    (filter aktif)
+                </span>
+            </span> -->
+            <span v-if="hasSensitive" class="app-info-text">
+                Klik ikon <i class="ti ti-eye" style="font-size:0.85rem;vertical-align:-1px"></i>
+                untuk mengungkap data sensitif
+            </span>
         </div>
 
         <!-- Footer slot -->
@@ -633,8 +777,9 @@ function hasCellSlot(key: string): boolean {
     padding-block: 0.85rem;
 }
 
-.app-th-no     { width: 52px; }
+.app-th-no      { width: 52px; }
 .app-th-actions { width: 120px; }
+.app-th-select  { width: 44px; text-align: center; vertical-align: middle !important; }
 
 // ── Rows ──────────────────────────────────────────────────────────────────────
 .table > tbody > tr > td {
@@ -772,5 +917,116 @@ function hasCellSlot(key: string): boolean {
 .app-perpage-select {
     width: auto;
     min-width: 88px;
+}
+
+// ── Info bar ──────────────────────────────────────────────────────────────────
+.app-info-bar {
+    display: flex;
+    align-items: center;
+    margin-top: 0.75rem;
+    padding-top: 0.625rem;
+    padding-bottom: 0.125rem;
+    border-top: 1px solid var(--bs-border-color);
+}
+
+.app-info-text {
+    font-size: 0.775rem;
+    color: var(--bs-secondary-color);
+    line-height: 1.4;
+}
+
+.app-info-filter {
+    color: var(--bs-warning-text-emphasis);
+    font-style: italic;
+}
+
+// ── Pagination ────────────────────────────────────────────────────────────────
+.app-pagination-bar {
+    padding-top: 0;
+    margin-top: 1rem;
+}
+
+.app-pagination-info {
+    font-size: 0.8rem;
+    color: var(--bs-secondary-color);
+    line-height: 1.4;
+}
+
+.app-pagination {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.app-page-item {
+    &.disabled .app-page-btn {
+        opacity: 0.35;
+        cursor: not-allowed;
+        pointer-events: none;
+    }
+
+    &.active .app-page-btn {
+        background-color: var(--bs-primary);
+        border-color: var(--bs-primary);
+        color: #fff;
+        font-weight: 600;
+        box-shadow: 0 2px 8px rgba(var(--bs-primary-rgb), 0.35);
+    }
+}
+
+.app-page-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 34px;
+    height: 34px;
+    padding: 0 7px;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--bs-body-color);
+    background-color: var(--bs-body-bg);
+    border: 1px solid var(--bs-border-color);
+    border-radius: 8px;
+    cursor: pointer;
+    line-height: 1;
+    transition: background-color 0.15s ease, color 0.15s ease,
+                border-color 0.15s ease, box-shadow 0.15s ease;
+
+    i {
+        font-size: 1rem;
+        line-height: 1;
+    }
+
+    &:hover:not(:disabled) {
+        background-color: var(--bs-primary-bg-subtle);
+        border-color: var(--bs-primary-border-subtle);
+        color: var(--bs-primary);
+    }
+
+    &:focus-visible {
+        outline: 2px solid var(--bs-primary);
+        outline-offset: 2px;
+        z-index: 1;
+    }
+
+    &:active:not(:disabled) {
+        transform: scale(0.92);
+    }
+}
+
+.app-page-ellipsis {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 28px;
+    height: 34px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--bs-secondary-color);
+    letter-spacing: 0.08em;
+    user-select: none;
 }
 </style>

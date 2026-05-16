@@ -3,8 +3,10 @@
 namespace Database\Seeders;
 
 use App\Models\User;
+use Database\Seeders\Mtq\MtqMasterSeeder;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Database\Seeders\WilayahSeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -19,6 +21,8 @@ class DatabaseSeeder extends Seeder
             RolePermissionSeeder::class,
             MenuSeeder::class,
             ProfileMenuSeeder::class,
+            WilayahSeeder::class,
+            MtqMasterSeeder::class,
         ]);
 
         $users = [

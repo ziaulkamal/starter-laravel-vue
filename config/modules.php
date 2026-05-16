@@ -19,8 +19,14 @@ return [
     'users'    => ['view', 'create', 'edit', 'delete'],
     'settings' => ['menu', 'profile-menu'],
 
-    // Contoh modul baru — uncomment jika modul sudah dibuat:
-    // 'employees' => ['view', 'create', 'edit', 'delete'],
-    // 'reports'   => ['view', 'export'],
-    // 'products'  => ['view', 'create', 'edit', 'delete'],
+    // ── MTQ ──────────────────────────────────────────────────────────
+    'peserta'   => ['view', 'create', 'edit', 'delete', 'verify'],
+    'sesi'      => ['view', 'create', 'edit', 'delete', 'publish', 'close'],
+    'nilai'     => ['view', 'input', 'unlock'],
+    'laporan'   => ['view', 'export'],
+    'sanggahan' => ['view', 'create', 'respond'],
+    'audit-log' => ['view', 'export'],
+    'dashboard' => ['view'],
+    'berita'    => ['view', 'create', 'edit', 'delete'],
+    'galeri'    => ['view', 'create', 'edit', 'delete'],
 ];
