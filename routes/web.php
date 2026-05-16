@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Settings\PendingRegistrationController;
 use App\Http\Controllers\Settings\RegistrationLogController;
 use App\Http\Controllers\Settings\RoleController;
@@ -24,7 +25,11 @@ Route::get('/reset',  [AuthController::class, 'reset'])->name('reset');
 Route::middleware('auth')->group(function () {
 
     Route::get('/', fn () => Inertia::render('Home'))->name('dashboard');
-    Route::get('/profile', fn () => Inertia::render('Profile/Index'))->name('profile');
+
+    Route::get('/profile',             [ProfileController::class, 'show'])->name('profile');
+    Route::put('/profile/info',        [ProfileController::class, 'updateInfo'])->name('profile.info');
+    Route::put('/profile/email',       [ProfileController::class, 'updateEmail'])->name('profile.email');
+    Route::put('/profile/password',    [ProfileController::class, 'updatePassword'])->name('profile.password');
 
     // Settings: Users (admin & superadmin)
     Route::middleware('permission:users.view')->prefix('settings')->name('settings.')->group(function () {
