@@ -1,6 +1,12 @@
 <template>
     <AuthLayout title="Masuk">
         <AuthCard>
+            <div v-if="$page.props.flash.success"
+                 class="alert alert-success alert-dismissible fade show mb-4 small" role="alert">
+                <i class="ti ti-circle-check me-2"></i>{{ $page.props.flash.success }}
+                <button type="button" class="btn-close btn-sm" data-bs-dismiss="alert"></button>
+            </div>
+
             <SocialButtons @google="loginWithGoogle" @sso="loginWithSSO" />
 
             <div class="position-relative text-center my-4">

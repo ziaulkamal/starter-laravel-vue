@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\Settings\PendingRegistrationController;
 use App\Http\Controllers\Settings\RoleController;
 use App\Http\Controllers\Settings\UserController;
 use Illuminate\Support\Facades\Route;
@@ -35,6 +37,18 @@ Route::middleware('auth')->group(function () {
     Route::middleware('role:superadmin')->prefix('settings')->name('settings.')->group(function () {
         Route::get('/roles',           [RoleController::class, 'index'])->name('roles.index');
         Route::put('/roles/{role}',    [RoleController::class, 'update'])->name('roles.update');
+
+        // Pending registrations approval
+        Route::get('/pending-registrations', [PendingRegistrationController::class, 'index'])->name('pending-registrations.index');
+        Route::post('/pending-registrations/{pending}/approve', [PendingRegistrationController::class, 'approve'])->name('pending-registrations.approve');
+        Route::post('/pending-registrations/{pending}/reject',  [PendingRegistrationController::class, 'reject'])->name('pending-registrations.reject');
+    });
+
+    // Internal API: notifications (polling)
+    Route::prefix('api/internal')->name('api.')->group(function () {
+        Route::get('/notifications',              [NotificationController::class, 'index'])->name('notifications.index');
+        Route::post('/notifications/{id}/read',   [NotificationController::class, 'markRead'])->name('notifications.read');
+        Route::post('/notifications/read-all',    [NotificationController::class, 'markAllRead'])->name('notifications.read-all');
     });
 
     Route::get('/demo/table', fn () => Inertia::render('Components/TableDemo'));
