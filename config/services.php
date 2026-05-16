@@ -35,4 +35,20 @@ return [
         ],
     ],
 
+    'google' => [
+        'client_id'     => env('GOOGLE_CLIENT_ID'),
+        'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+        'redirect'      => env('GOOGLE_REDIRECT_URI', '/auth/google/callback'),
+    ],
+
+    'sso' => [
+        'client_id'     => env('SSO_CLIENT_ID'),
+        'client_secret' => env('SSO_CLIENT_SECRET'),
+        'auth_url'      => env('SSO_AUTH_URL'),
+        'token_url'     => env('SSO_TOKEN_URL'),
+        'user_url'      => env('SSO_USER_URL'),
+        'redirect'      => env('SSO_REDIRECT_URI', '/auth/sso/callback'),
+        'scopes'        => explode(',', env('SSO_SCOPES', 'openid,email,profile')),
+    ],
+
 ];

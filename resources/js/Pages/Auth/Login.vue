@@ -7,6 +7,12 @@
                 <button type="button" class="btn-close btn-sm" data-bs-dismiss="alert"></button>
             </div>
 
+            <div v-if="$page.props.flash.error"
+                 class="alert alert-danger alert-dismissible fade show mb-4 small" role="alert">
+                <i class="ti ti-alert-circle me-2"></i>{{ $page.props.flash.error }}
+                <button type="button" class="btn-close btn-sm" data-bs-dismiss="alert"></button>
+            </div>
+
             <SocialButtons @google="loginWithGoogle" @sso="loginWithSSO" />
 
             <div class="position-relative text-center my-4">
@@ -90,10 +96,10 @@ function submit() {
 }
 
 function loginWithGoogle() {
-    // TODO: implement Google OAuth
+    window.location.href = '/auth/google';
 }
 
 function loginWithSSO() {
-    // TODO: implement SSO
+    window.location.href = '/auth/sso';
 }
 </script>

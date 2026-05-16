@@ -32,10 +32,12 @@ class HandleInertiaRequests extends Middleware
 
             'auth' => [
                 'user' => $user ? [
-                    'id'        => $user->id,
-                    'name'      => $user->name,
-                    'email'     => $user->email,
-                    'is_active' => (bool) $user->is_active,
+                    'id'           => $user->id,
+                    'name'         => $user->name,
+                    'email'        => $user->email,
+                    'avatar'       => $user->avatar,
+                    'login_method' => $user->login_method ?? 'password',
+                    'is_active'    => (bool) $user->is_active,
                 ] : null,
                 'permissions' => $userPermissions,
                 'roles'       => $userRoles,

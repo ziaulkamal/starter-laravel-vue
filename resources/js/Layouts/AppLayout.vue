@@ -27,6 +27,8 @@
                         :user-name="userName"
                         :user-role="userRole"
                         :user-avatar="userAvatar"
+                        :user-email="userEmail"
+                        :user-login-method="userLoginMethod"
                         @toggle-sidebar="toggleSidebar"
                         @logout="logout"
                     />
@@ -58,7 +60,6 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { Head, router, usePage } from '@inertiajs/vue3';
-import defaultAvatar from '@images/profile/user-1.jpg';
 import AppSidebar from '@/Components/Sidebar/AppSidebar.vue';
 import AppHeader from '@/Components/Header/AppHeader.vue';
 import AppBreadcrumb from '@/Components/UI/AppBreadcrumb.vue';
@@ -73,9 +74,11 @@ defineProps({
 const loading = ref(true);
 const page = usePage();
 
-const userName = page.props.auth?.user?.name ?? 'User';
-const userRole = page.props.auth?.user?.role ?? '';
-const userAvatar = page.props.auth?.user?.avatar ?? defaultAvatar;
+const userName        = page.props.auth?.user?.name ?? 'User';
+const userRole        = page.props.auth?.user?.role ?? '';
+const userAvatar      = page.props.auth?.user?.avatar ?? '';
+const userEmail       = page.props.auth?.user?.email ?? '';
+const userLoginMethod = page.props.auth?.user?.login_method ?? 'password';
 const isActive = computed(() => page.props.auth?.user?.is_active !== false);
 
 const appName = page.props.appName ?? document.title;

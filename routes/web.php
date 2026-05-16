@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\Auth\SocialAuthController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Settings\PendingRegistrationController;
@@ -16,7 +17,15 @@ Route::middleware('guest')->group(function () {
     Route::post('/login',   [AuthController::class, 'login'])->middleware('throttle:10,1');
     Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
     Route::post('/register',[AuthController::class, 'register'])->middleware('throttle:3,60');
+
+    // Social Auth redirects (guest only)
+    Route::get('/auth/google', [SocialAuthController::class, 'redirectToGoogle'])->name('auth.google');
+    Route::get('/auth/sso',    [SocialAuthController::class, 'redirectToSso'])->name('auth.sso');
 });
+
+// Social Auth callbacks (no guest guard — OAuth provider redirects back here)
+Route::get('/auth/google/callback', [SocialAuthController::class, 'handleGoogleCallback'])->name('auth.google.callback');
+Route::get('/auth/sso/callback',    [SocialAuthController::class, 'handleSsoCallback'])->name('auth.sso.callback');
 
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->name('logout');
 Route::get('/reset',  [AuthController::class, 'reset'])->name('reset');

@@ -36,6 +36,8 @@
                         :user-name="userName"
                         :user-role="userRole"
                         :user-avatar="userAvatar"
+                        :user-email="userEmail"
+                        :user-login-method="userLoginMethod"
                         @logout="$emit('logout')"
                     />
                 </ul>
@@ -51,9 +53,11 @@ import HeaderNotifications from './HeaderNotifications.vue';
 import HeaderUserMenu from './HeaderUserMenu.vue';
 
 defineProps({
-    userName: { type: String, default: 'User' },
-    userRole: { type: String, default: '' },
-    userAvatar: { type: String, default: '' },
+    userName:        { type: String, default: 'User' },
+    userRole:        { type: String, default: '' },
+    userAvatar:      { type: String, default: '' },
+    userEmail:       { type: String, default: '' },
+    userLoginMethod: { type: String, default: 'password' },
 });
 
 defineEmits(['toggle-sidebar', 'logout']);

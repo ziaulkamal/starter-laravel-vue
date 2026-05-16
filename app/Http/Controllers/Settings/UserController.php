@@ -27,6 +27,7 @@ class UserController extends Controller
                 'avatar'        => $user->avatar,
                 'is_active'     => $user->is_active,
                 'last_login_at' => $user->last_login_at?->format('d M Y H:i'),
+                'login_method'  => $user->login_method ?? 'password',
                 'roles'         => $user->roles->pluck('name'),
             ]);
 

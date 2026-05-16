@@ -34,7 +34,7 @@ class AuthController extends Controller
 
         $request->session()->regenerate();
 
-        Auth::user()->update(['last_login_at' => now()]);
+        Auth::user()->update(['last_login_at' => now(), 'login_method' => 'password']);
 
         return redirect()->intended('/');
     }
