@@ -1,11 +1,11 @@
 <template>
-    <AuthLayout title="Login">
+    <AuthLayout title="Masuk">
         <AuthCard>
-            <SocialButtons @google="loginWithGoogle" @facebook="loginWithFacebook" />
+            <SocialButtons @google="loginWithGoogle" @sso="loginWithSSO" />
 
             <div class="position-relative text-center my-4">
                 <p class="mb-0 fs-4 px-3 d-inline-block bg-body text-dark z-index-5 position-relative">
-                    or sign in with
+                    atau
                 </p>
                 <span class="border-top w-100 position-absolute top-50 start-50 translate-middle"></span>
             </div>
@@ -24,7 +24,7 @@
                 <AppInput
                     v-model="form.password"
                     type="password"
-                    label="Password"
+                    label="Kata Sandi"
                     :error="form.errors.password"
                     autocomplete="current-password"
                     class="mb-4"
@@ -33,10 +33,10 @@
                 <div class="d-flex align-items-center justify-content-between mb-4">
                     <AppCheckbox
                         v-model="form.remember"
-                        label="Remember this Device"
+                        label="Ingat Perangkat Ini"
                     />
                     <Link href="/forgot-password" class="text-primary fw-medium">
-                        Forgot Password?
+                        Lupa Kata Sandi?
                     </Link>
                 </div>
 
@@ -46,12 +46,12 @@
                     :disabled="form.processing"
                 >
                     <span v-if="form.processing" class="spinner-border spinner-border-sm me-2" role="status"></span>
-                    Sign In
+                    Masuk
                 </button>
 
                 <div class="d-flex align-items-center justify-content-center">
-                    <p class="fs-4 mb-0 fw-medium">New here?</p>
-                    <Link href="/register" class="text-primary fw-medium ms-2">Create an account</Link>
+                    <p class="fs-4 mb-0 fw-medium">Belum punya akun?</p>
+                    <Link href="/register" class="text-primary fw-medium ms-2">Daftar Sekarang</Link>
                 </div>
             </form>
         </AuthCard>
@@ -87,7 +87,7 @@ function loginWithGoogle() {
     // TODO: implement Google OAuth
 }
 
-function loginWithFacebook() {
-    // TODO: implement Facebook OAuth
+function loginWithSSO() {
+    // TODO: implement SSO
 }
 </script>
