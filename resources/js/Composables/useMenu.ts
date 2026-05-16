@@ -27,8 +27,9 @@ export function useMenu() {
         return item.children.some(child => isPathActive(child.href))
     }
 
-    function collapseId(href: string): string {
-        const slug = (href ?? '').replace(/^\//, '').replace(/\//g, '-')
+    function collapseId(href: string | null | undefined, label = ''): string {
+        const key = href ?? label
+        const slug = key.replace(/^\//, '').replace(/\//g, '-').replace(/\s+/g, '-').toLowerCase()
         return slug ? `menu-${slug}` : 'menu-root'
     }
 

@@ -45,7 +45,6 @@
                                 <th>Href</th>
                                 <th class="text-center">Urutan</th>
                                 <th class="text-center">Status</th>
-                                <th>Akses</th>
                                 <th class="text-end">Aksi</th>
                             </tr>
                         </thead>
@@ -74,9 +73,6 @@
                                             :class="menu.is_active ? 'text-bg-success' : 'text-bg-secondary'">
                                             {{ menu.is_active ? 'Aktif' : 'Nonaktif' }}
                                         </span>
-                                    </td>
-                                    <td>
-                                        <AccessBadges :permission="menu.permission" :roles="menu.roles" />
                                     </td>
                                     <td class="text-end">
                                         <button class="btn btn-sm btn-outline-primary me-1" title="Edit"
@@ -114,9 +110,6 @@
                                             {{ child.is_active ? 'Aktif' : 'Nonaktif' }}
                                         </span>
                                     </td>
-                                    <td>
-                                        <AccessBadges :roles="child.roles" />
-                                    </td>
                                     <td class="text-end">
                                         <button class="btn btn-sm btn-outline-primary me-1" title="Edit"
                                             @click="openEdit(child)">
@@ -131,7 +124,7 @@
                             </template>
 
                             <tr v-if="!menus.length">
-                                <td colspan="8" class="text-center text-muted py-4">Belum ada menu.</td>
+                                <td colspan="7" class="text-center text-muted py-4">Belum ada menu.</td>
                             </tr>
                         </tbody>
                     </table>
@@ -378,21 +371,6 @@ import { useForm, router } from '@inertiajs/vue3';
 import { Modal } from 'bootstrap';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import IconPicker from '@/Components/UI/IconPicker.vue';
-
-// ── Sub-component: access badges ────────────────────────────────
-const AccessBadges = {
-    props: { permission: String, roles: Array },
-    template: `
-        <span v-if="permission" class="d-flex flex-wrap gap-1">
-            <span class="badge rounded-pill text-bg-info font-monospace">{{ permission }}</span>
-        </span>
-        <span v-else-if="roles?.length" class="d-flex flex-wrap gap-1">
-            <span v-for="r in roles" :key="r.id"
-                class="badge rounded-pill text-bg-warning text-capitalize">{{ r.name }}</span>
-        </span>
-        <span v-else class="text-muted small">Semua</span>
-    `,
-};
 
 const props = defineProps({
     menus:                { type: Array,  required: true },

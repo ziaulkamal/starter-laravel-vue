@@ -87,6 +87,11 @@ class HandleInertiaRequests extends Middleware
         $filtered = collect($allMenus)
             ->filter(fn (array $item) => $this->canSeeMenu($item, $userRoles, $userPermissions, $isSuperAdmin))
             ->map(fn (array $item) => $this->formatEntry($item, $userRoles, $userPermissions, $isSuperAdmin))
+            ->filter(fn (array $item) => ! (
+                $item['type'] === 'item' &&
+                empty($item['href']) &&
+                empty($item['children'] ?? [])
+            ))
             ->values()
             ->toArray();
 
