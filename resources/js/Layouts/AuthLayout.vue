@@ -1,4 +1,6 @@
 <template>
+    <Head :title="title ? `${title} - ${appName}` : appName" />
+
     <div class="preloader" v-if="loading">
         <img src="/favicon.png" alt="loader" class="lds-ripple img-fluid" />
     </div>
@@ -18,10 +20,13 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
+import { Head, usePage } from '@inertiajs/vue3';
 
 defineProps({
     title: { type: String, default: '' },
 });
+
+const appName = usePage().props.appName;
 
 const loading = ref(true);
 
