@@ -40,6 +40,14 @@
                 </button>
             </div>
 
+            <!-- Reset option for 500 -->
+            <div v-if="status === 500" class="mt-4">
+                <p class="text-muted small mb-2">Jika masalah berlanjut setelah restart server, coba setel ulang aplikasi.</p>
+                <button class="btn btn-sm btn-outline-danger" @click="hardReset">
+                    <i class="ti ti-rotate me-1"></i>Setel Ulang &amp; Masuk Ulang
+                </button>
+            </div>
+
             <!-- Subtle footer -->
             <p class="text-muted mt-5 small mb-0" style="opacity: .5">
                 HTTP {{ status }} &middot; {{ appName }}
@@ -121,5 +129,11 @@ function goBack() {
 
 function reload() {
     window.location.reload();
+}
+
+function hardReset() {
+    localStorage.clear();
+    sessionStorage.clear();
+    window.location.href = '/reset';
 }
 </script>

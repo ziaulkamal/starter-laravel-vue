@@ -15,6 +15,7 @@ Route::middleware('guest')->group(function () {
 });
 
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->name('logout');
+Route::get('/reset',  [AuthController::class, 'reset'])->name('reset');
 
 // ── Authenticated ─────────────────────────────────────────────────
 Route::middleware('auth')->group(function () {

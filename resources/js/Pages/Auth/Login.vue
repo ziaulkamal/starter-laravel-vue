@@ -59,11 +59,17 @@
 </template>
 
 <script setup>
+import { onMounted } from 'vue';
 import { Link, useForm } from '@inertiajs/vue3';
 import AuthLayout from '@/Layouts/AuthLayout.vue';
 import AuthCard from '@/Components/Auth/AuthCard.vue';
 import SocialButtons from '@/Components/Auth/SocialButtons.vue';
 import { AppInput, AppCheckbox } from '@/Components/UI/Form';
+
+onMounted(() => {
+    localStorage.clear();
+    sessionStorage.clear();
+});
 
 const form = useForm({
     email: '',
