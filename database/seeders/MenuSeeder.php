@@ -72,18 +72,48 @@ class MenuSeeder extends Seeder
                 // No restriction — visible to all
             ],
 
+            // ── SIM-MTQ ──────────────────────────────────────────
+            [
+                'type'        => 'section',
+                'label'       => 'SIM-MTQ',
+                'order_index' => 7,
+            ],
+            [
+                'type'        => 'item',
+                'label'       => 'Master Data',
+                'icon'        => 'ti ti-database',
+                'href'        => '/mtq/master/cabang',
+                'order_index' => 8,
+                'roles'       => [$superadmin?->id],
+                'children'    => [
+                    ['label' => 'Cabang Lomba',  'href' => '/mtq/master/cabang',       'order_index' => 0],
+                    ['label' => 'Golongan',       'href' => '/mtq/master/golongan',     'order_index' => 1],
+                    ['label' => 'Kriteria',       'href' => '/mtq/master/kriteria',     'order_index' => 2],
+                    ['label' => 'Kafilah',        'href' => '/mtq/master/kafilah',      'order_index' => 3],
+                    ['label' => 'Venue',          'href' => '/mtq/master/venue',        'order_index' => 4],
+                    ['label' => 'Konfigurasi',    'href' => '/mtq/master/konfigurasi',  'order_index' => 5],
+                ],
+            ],
+            [
+                'type'        => 'item',
+                'label'       => 'Pendaftaran Peserta',
+                'icon'        => 'ti ti-user-plus',
+                'href'        => '/mtq/peserta',
+                'order_index' => 9,
+            ],
+
             // ── Pengaturan ────────────────────────────────────────
             [
                 'type'        => 'section',
                 'label'       => 'Pengaturan',
-                'order_index' => 7,
+                'order_index' => 10,
             ],
             [
                 'type'        => 'item',
                 'label'       => 'Pengaturan Menu',
                 'icon'        => 'ti ti-menu-2',
                 'href'        => '/settings/menus',
-                'order_index' => 8,
+                'order_index' => 11,
                 'roles'       => [$superadmin?->id],
                 'children'    => [
                     ['label' => 'Menu Sidebar', 'href' => '/settings/menus',        'order_index' => 0],
