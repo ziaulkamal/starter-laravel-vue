@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\SocialAuthController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Settings\PendingRegistrationController;
+use App\Http\Controllers\Settings\PermissionScanController;
 use App\Http\Controllers\Settings\RegistrationLogController;
 use App\Http\Controllers\Settings\RoleController;
 use App\Http\Controllers\Settings\UserController;
@@ -50,8 +51,10 @@ Route::middleware('auth')->group(function () {
 
     // Settings: Roles (superadmin only)
     Route::middleware('role:superadmin')->prefix('settings')->name('settings.')->group(function () {
-        Route::get('/roles',           [RoleController::class, 'index'])->name('roles.index');
-        Route::put('/roles/{role}',    [RoleController::class, 'update'])->name('roles.update');
+        Route::get('/roles',                      [RoleController::class, 'index'])->name('roles.index');
+        Route::put('/roles/{role}',               [RoleController::class, 'update'])->name('roles.update');
+        Route::post('/permissions/scan',          [PermissionScanController::class, 'scan'])->name('permissions.scan');
+        Route::post('/permissions/sync',          [PermissionScanController::class, 'sync'])->name('permissions.sync');
 
         // Pending registrations approval
         Route::get('/pending-registrations', [PendingRegistrationController::class, 'index'])->name('pending-registrations.index');

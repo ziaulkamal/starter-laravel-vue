@@ -3,6 +3,10 @@
         title="Manajemen Role & Permission"
         :breadcrumb="[{ label: 'Pengaturan' }, { label: 'Role & Permission' }]"
     >
+        <template #page-actions>
+            <PermissionScannerModal @synced="onSynced" />
+        </template>
+
         <!-- Flash -->
         <div v-if="$page.props.flash.success" class="alert alert-success alert-dismissible fade show mb-3" role="alert">
             {{ $page.props.flash.success }}
@@ -70,6 +74,7 @@
 import { computed, reactive, ref } from 'vue';
 import { router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
+import PermissionScannerModal from '@/Components/Settings/PermissionScannerModal.vue';
 
 interface Permission {
     id: number;
@@ -116,5 +121,9 @@ function save(role: RoleRow) {
             onFinish: () => { savingId.value = null; },
         }
     );
+}
+
+function onSynced() {
+    router.reload({ only: ['permissions', 'roles'] });
 }
 </script>
