@@ -3,6 +3,7 @@
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Settings\PendingRegistrationController;
+use App\Http\Controllers\Settings\RegistrationLogController;
 use App\Http\Controllers\Settings\RoleController;
 use App\Http\Controllers\Settings\UserController;
 use Illuminate\Support\Facades\Route;
@@ -42,6 +43,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/pending-registrations', [PendingRegistrationController::class, 'index'])->name('pending-registrations.index');
         Route::post('/pending-registrations/{pending}/approve', [PendingRegistrationController::class, 'approve'])->name('pending-registrations.approve');
         Route::post('/pending-registrations/{pending}/reject',  [PendingRegistrationController::class, 'reject'])->name('pending-registrations.reject');
+
+        // Registration logs (JSON)
+        Route::get('/registration-logs', [RegistrationLogController::class, 'index'])->name('registration-logs.index');
     });
 
     // Internal API: notifications (polling)

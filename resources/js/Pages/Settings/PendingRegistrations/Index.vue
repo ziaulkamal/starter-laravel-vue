@@ -50,7 +50,7 @@
                                 <button
                                     class="btn btn-sm btn-success"
                                     :disabled="processing === row.id"
-                                    @click="approve(row)"
+                                    @click="openApprove(row)"
                                 >
                                     <i class="ti ti-check me-1"></i>Setujui
                                 </button>
@@ -69,30 +69,88 @@
             </div>
         </div>
 
+        <!-- Approve modal -->
+        <div class="modal fade" id="approveModal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header border-0 pb-0">
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body text-center px-4 pb-2">
+                        <div class="mb-3">
+                            <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-success-subtle"
+                                  style="width: 64px; height: 64px">
+                                <i class="ti ti-user-check text-success" style="font-size: 2rem"></i>
+                            </span>
+                        </div>
+                        <h5 class="fw-semibold mb-1">Setujui Pendaftaran</h5>
+                        <p class="text-muted mb-1">
+                            Anda akan menyetujui pendaftaran dari
+                        </p>
+                        <p class="mb-0">
+                            <strong class="text-dark">{{ approveTarget?.name }}</strong>
+                            <br>
+                            <span class="text-muted small">{{ approveTarget?.email }}</span>
+                            <span v-if="approveTarget?.phone" class="text-muted small"> · {{ approveTarget?.phone }}</span>
+                        </p>
+                        <p class="mt-2 mb-0 small text-muted">
+                            Akun akan segera dibuat dan user dapat login.
+                        </p>
+                    </div>
+                    <div class="modal-footer border-0 pt-2 justify-content-center gap-2">
+                        <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">Batal</button>
+                        <button type="button" class="btn btn-success px-4"
+                                :disabled="processing !== null"
+                                @click="confirmApprove">
+                            <span v-if="processing" class="spinner-border spinner-border-sm me-2"></span>
+                            <i v-else class="ti ti-check me-1"></i>
+                            Ya, Setujui
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Reject modal -->
         <div class="modal fade" id="rejectModal" tabindex="-1">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Tolak Pendaftaran</h5>
+                    <div class="modal-header border-0 pb-0">
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
-                    <div class="modal-body">
-                        <p class="mb-3">
-                            Tolak pendaftaran dari <strong>{{ rejectTarget?.name }}</strong>
-                            (<span class="text-muted">{{ rejectTarget?.email }}</span>)?
+                    <div class="modal-body text-center px-4 pb-2">
+                        <div class="mb-3">
+                            <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-danger-subtle"
+                                  style="width: 64px; height: 64px">
+                                <i class="ti ti-user-x text-danger" style="font-size: 2rem"></i>
+                            </span>
+                        </div>
+                        <h5 class="fw-semibold mb-1">Tolak Pendaftaran</h5>
+                        <p class="text-muted mb-1">
+                            Anda akan menolak pendaftaran dari
                         </p>
-                        <label class="form-label">Alasan Penolakan <span class="text-muted fw-normal">(opsional)</span></label>
-                        <textarea v-model="rejectNotes" class="form-control" rows="3"
-                                  placeholder="Masukkan alasan penolakan..."></textarea>
+                        <p class="mb-3">
+                            <strong class="text-dark">{{ rejectTarget?.name }}</strong>
+                            <br>
+                            <span class="text-muted small">{{ rejectTarget?.email }}</span>
+                        </p>
+                        <div class="text-start">
+                            <label class="form-label small fw-semibold">
+                                Alasan Penolakan
+                                <span class="text-muted fw-normal">(opsional)</span>
+                            </label>
+                            <textarea v-model="rejectNotes" class="form-control form-control-sm" rows="3"
+                                      placeholder="Masukkan alasan penolakan..."></textarea>
+                        </div>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                        <button type="button" class="btn btn-danger"
+                    <div class="modal-footer border-0 pt-2 justify-content-center gap-2">
+                        <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">Batal</button>
+                        <button type="button" class="btn btn-danger px-4"
                                 :disabled="processing !== null"
                                 @click="confirmReject">
                             <span v-if="processing" class="spinner-border spinner-border-sm me-2"></span>
-                            Tolak Pendaftaran
+                            <i v-else class="ti ti-x me-1"></i>
+                            Ya, Tolak
                         </button>
                     </div>
                 </div>
@@ -102,7 +160,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onBeforeUnmount } from 'vue';
 import { router, usePage } from '@inertiajs/vue3';
 // @ts-expect-error — bootstrap ships no .d.ts; typed via env.d.ts ambient declaration
 import { Modal } from 'bootstrap';
@@ -137,9 +195,10 @@ const columns: TableColumn[] = [
 
 const pendingCount = computed(() => props.items.filter(i => i.status === 'pending').length);
 
-const processing   = ref<number | null>(null);
-const rejectTarget = ref<PendingRow | null>(null);
-const rejectNotes  = ref('');
+const processing    = ref<number | null>(null);
+const approveTarget = ref<PendingRow | null>(null);
+const rejectTarget  = ref<PendingRow | null>(null);
+const rejectNotes   = ref('');
 
 const statusMap: Record<string, { label: string; cls: string }> = {
     pending:  { label: 'Menunggu',  cls: 'badge text-bg-warning' },
@@ -155,12 +214,20 @@ function statusLabel(status: string): string {
     return statusMap[status]?.label ?? status;
 }
 
-function approve(row: Record<string, unknown>) {
-    if (!confirm(`Setujui pendaftaran dari ${row.name}?`)) return;
-    processing.value = row.id as number;
-    router.post(`/settings/pending-registrations/${row.id}/approve`, {}, {
+function openApprove(row: Record<string, unknown>) {
+    approveTarget.value = row as unknown as PendingRow;
+    Modal.getOrCreateInstance(document.getElementById('approveModal')!).show();
+}
+
+function confirmApprove() {
+    if (!approveTarget.value) return;
+    processing.value = approveTarget.value.id;
+    router.post(`/settings/pending-registrations/${approveTarget.value.id}/approve`, {}, {
         preserveScroll: true,
-        onFinish: () => (processing.value = null),
+        onFinish: () => {
+            processing.value = null;
+            Modal.getInstance(document.getElementById('approveModal')!)?.hide();
+        },
     });
 }
 
@@ -185,4 +252,15 @@ function confirmReject() {
         },
     );
 }
+
+onBeforeUnmount(() => {
+    ['approveModal', 'rejectModal'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) Modal.getInstance(el)?.dispose();
+    });
+    document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+    document.body.classList.remove('modal-open');
+    document.body.style.removeProperty('overflow');
+    document.body.style.removeProperty('padding-right');
+});
 </script>

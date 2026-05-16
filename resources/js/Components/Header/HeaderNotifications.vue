@@ -1,8 +1,7 @@
 <template>
     <li class="nav-item nav-icon-hover-bg rounded-circle dropdown">
         <a class="nav-link position-relative" href="javascript:void(0)"
-           data-bs-toggle="dropdown" aria-expanded="false"
-           @click="onOpen">
+           data-bs-toggle="dropdown" aria-expanded="false">
             <i class="ti ti-bell-ringing"></i>
             <span v-if="unreadCount > 0"
                   class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
@@ -15,7 +14,7 @@
             <!-- Header -->
             <div class="d-flex align-items-center justify-content-between px-4 py-3 border-bottom">
                 <h6 class="mb-0 fw-semibold">Notifikasi</h6>
-                <button v-if="unreadCount > 0"
+                <button v-if="items.length > 0"
                         class="btn btn-sm btn-link text-muted p-0 text-decoration-none"
                         @click.stop="markAllRead">
                     Tandai semua dibaca
@@ -24,13 +23,9 @@
 
             <!-- List -->
             <div style="max-height: 380px; overflow-y: auto">
-                <div v-if="loading" class="text-center py-4">
-                    <div class="spinner-border spinner-border-sm text-muted"></div>
-                </div>
-
-                <template v-else-if="items.length > 0">
+                <template v-if="items.length > 0">
                     <div v-for="item in items" :key="item.id"
-                         :class="['d-flex gap-3 px-4 py-3 border-bottom notification-item', { 'bg-light-subtle': !item.read }]"
+                         class="d-flex gap-3 px-4 py-3 border-bottom notification-item bg-light-subtle"
                          @click="markRead(item)">
 
                         <div class="flex-shrink-0 mt-1">
@@ -42,7 +37,7 @@
                         <div class="flex-grow-1 overflow-hidden">
                             <p class="mb-1 fw-semibold text-truncate small">
                                 Pendaftaran Baru
-                                <span v-if="!item.read" class="badge text-bg-primary ms-1" style="font-size: 0.55rem">Baru</span>
+                                <span class="badge text-bg-primary ms-1" style="font-size: 0.55rem">Baru</span>
                             </p>
                             <p class="mb-1 text-muted small lh-sm">
                                 <strong>{{ item.data.name }}</strong> ({{ item.data.email }})<br>
@@ -61,7 +56,8 @@
                     </div>
                 </template>
 
-                <p v-else class="text-muted text-center py-4 mb-0 small">Tidak ada notifikasi</p>
+                <p v-else class="text-muted text-center py-4 mb-0 small">Tidak ada notifikasi baru</p>
+
             </div>
         </div>
     </li>
@@ -75,7 +71,6 @@ const page = usePage();
 
 const unreadCount = ref(0);
 const items = ref([]);
-const loading = ref(false);
 
 let pollInterval = null;
 
@@ -93,15 +88,11 @@ async function fetchNotifications() {
     }
 }
 
-function onOpen() {
-    loading.value = true;
-    fetchNotifications().finally(() => (loading.value = false));
-}
-
 async function markRead(item) {
-    if (item.read) return;
-    item.read = true;
+    // Optimistic: langsung hilangkan dari list
+    items.value = items.value.filter(i => i.id !== item.id);
     unreadCount.value = Math.max(0, unreadCount.value - 1);
+
     await fetch(`/api/internal/notifications/${item.id}/read`, {
         method: 'POST',
         headers: {
@@ -112,8 +103,9 @@ async function markRead(item) {
 }
 
 async function markAllRead() {
-    items.value.forEach(i => (i.read = true));
+    items.value = [];
     unreadCount.value = 0;
+
     await fetch('/api/internal/notifications/read-all', {
         method: 'POST',
         headers: {
@@ -124,7 +116,6 @@ async function markAllRead() {
 }
 
 onMounted(() => {
-    // Only poll when user is authenticated
     if (page.props.auth?.user) {
         fetchNotifications();
         pollInterval = setInterval(fetchNotifications, 30_000);

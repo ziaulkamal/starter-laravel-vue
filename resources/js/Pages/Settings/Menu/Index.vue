@@ -115,7 +115,7 @@
                                         </span>
                                     </td>
                                     <td>
-                                        <RoleBadges :roles="child.roles" />
+                                        <AccessBadges :roles="child.roles" />
                                     </td>
                                     <td class="text-end">
                                         <button class="btn btn-sm btn-outline-primary me-1" title="Edit"
@@ -373,7 +373,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onBeforeUnmount } from 'vue';
 import { useForm, router } from '@inertiajs/vue3';
 import { Modal } from 'bootstrap';
 import AppLayout from '@/Layouts/AppLayout.vue';
@@ -533,4 +533,15 @@ function doDestroyAll() {
 function getModal(id) {
     return Modal.getOrCreateInstance(document.getElementById(id));
 }
+
+onBeforeUnmount(() => {
+    ['menuModal', 'deleteModal', 'destroyAllModal'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) Modal.getInstance(el)?.dispose();
+    });
+    document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+    document.body.classList.remove('modal-open');
+    document.body.style.removeProperty('overflow');
+    document.body.style.removeProperty('padding-right');
+});
 </script>

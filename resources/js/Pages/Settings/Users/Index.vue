@@ -189,7 +189,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onBeforeUnmount } from 'vue';
 import { useForm, router, usePage } from '@inertiajs/vue3';
 import { Modal } from 'bootstrap';
 import AppLayout from '@/Layouts/AppLayout.vue';
@@ -330,4 +330,15 @@ function doDelete() {
 function getModal(id: string) {
     return Modal.getOrCreateInstance(document.getElementById(id)!);
 }
+
+onBeforeUnmount(() => {
+    ['userModal', 'deleteUserModal'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) Modal.getInstance(el)?.dispose();
+    });
+    document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+    document.body.classList.remove('modal-open');
+    document.body.style.removeProperty('overflow');
+    document.body.style.removeProperty('padding-right');
+});
 </script>

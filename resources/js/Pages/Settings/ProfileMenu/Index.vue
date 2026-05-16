@@ -237,7 +237,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onBeforeUnmount } from 'vue';
 import { useForm, router } from '@inertiajs/vue3';
 import { Modal } from 'bootstrap';
 import AppLayout from '@/Layouts/AppLayout.vue';
@@ -369,4 +369,15 @@ function doDestroyAll() {
 function getModal(id) {
     return Modal.getOrCreateInstance(document.getElementById(id));
 }
+
+onBeforeUnmount(() => {
+    ['profileMenuModal', 'profileDeleteModal', 'profileDestroyAllModal'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) Modal.getInstance(el)?.dispose();
+    });
+    document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+    document.body.classList.remove('modal-open');
+    document.body.style.removeProperty('overflow');
+    document.body.style.removeProperty('padding-right');
+});
 </script>

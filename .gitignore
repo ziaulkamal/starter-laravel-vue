@@ -2,6 +2,9 @@
 *.bak
 *.backup
 *.lock
+*.sql
+MASTER_PROMPT.md
+TODO.md
 .DS_Store
 .env
 .env.backup
