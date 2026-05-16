@@ -79,7 +79,42 @@ const page = usePage();
 const unreadCount = ref(0);
 const items = ref([]);
 
-let pollInterval = null;
+let pollInterval  = null;
+let audioCtx      = null;
+let isFirstFetch  = true;
+let prevCount     = 0;
+
+function getAudioCtx() {
+    if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    return audioCtx;
+}
+
+function playNotificationSound() {
+    try {
+        const ctx = getAudioCtx();
+        if (ctx.state === 'suspended') ctx.resume();
+
+        const now = ctx.currentTime;
+
+        // Two-tone ping: 880 Hz → 1100 Hz
+        [[now, 880], [now + 0.18, 1100]].forEach(([start, freq]) => {
+            const osc  = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.type           = 'sine';
+            osc.frequency.value = freq;
+            gain.gain.setValueAtTime(0.25, start);
+            gain.gain.exponentialRampToValueAtTime(0.001, start + 0.28);
+            osc.start(start);
+            osc.stop(start + 0.28);
+        });
+    } catch {
+        // Web Audio API tidak tersedia — silent fallback
+    }
+}
 
 async function fetchNotifications() {
     try {
@@ -88,8 +123,15 @@ async function fetchNotifications() {
         });
         if (!res.ok) return;
         const data = await res.json();
+
+        if (!isFirstFetch && data.unread_count > prevCount) {
+            playNotificationSound();
+        }
+
+        isFirstFetch      = false;
+        prevCount         = data.unread_count;
         unreadCount.value = data.unread_count;
-        items.value = data.items;
+        items.value       = data.items;
     } catch {
         // silent — network error during poll is non-critical
     }
@@ -103,6 +145,7 @@ async function markRead(item) {
     // Optimistic: langsung hilangkan dari list
     items.value = items.value.filter(i => i.id !== item.id);
     unreadCount.value = Math.max(0, unreadCount.value - 1);
+    prevCount = unreadCount.value;
 
     await fetch(`/api/internal/notifications/${item.id}/read`, {
         method: 'POST',
@@ -116,6 +159,7 @@ async function markRead(item) {
 async function markAllRead() {
     items.value = [];
     unreadCount.value = 0;
+    prevCount = 0;
 
     await fetch('/api/internal/notifications/read-all', {
         method: 'POST',
