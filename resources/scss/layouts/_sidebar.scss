@@ -20,11 +20,17 @@
   .scroll-sidebar {
     overflow-y: auto;
     padding: $sidebar-spacing-x;
-    height: calc(100vh - 175px);
+    // desktop: profile card hidden → nav fills full height minus logo bar
+    height: calc(100vh - #{$headerHeight});
     border-radius: $border-radius;
 
     .simplebar-track.simplebar-horizontal {
       visibility: hidden !important;
+    }
+
+    // mobile/tablet: profile card is visible → account for its height
+    @include media-breakpoint-down(lg) {
+      height: calc(100vh - 175px);
     }
   }
 }

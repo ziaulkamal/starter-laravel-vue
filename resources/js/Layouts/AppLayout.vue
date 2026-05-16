@@ -11,6 +11,7 @@
                 <AppSidebar
                     :user-name="userName"
                     :user-role="userRole"
+                    :user-avatar="userAvatar"
                     @toggle-sidebar="toggleSidebar"
                     @close-sidebar="closeMobileSidebar"
                     @logout="logout"

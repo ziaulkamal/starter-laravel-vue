@@ -7,6 +7,7 @@
         <SidebarProfile
             :user-name="userName"
             :user-role="userRole"
+            :user-avatar="userAvatar"
             @logout="$emit('logout')"
         />
     </div>
@@ -18,8 +19,9 @@ import SidebarNav from './SidebarNav.vue';
 import SidebarProfile from './SidebarProfile.vue';
 
 defineProps({
-    userName: { type: String, default: 'User' },
-    userRole: { type: String, default: '' },
+    userName:   { type: String, default: 'User' },
+    userRole:   { type: String, default: '' },
+    userAvatar: { type: String, default: '' },
 });
 
 defineEmits(['toggle-sidebar', 'close-sidebar', 'logout']);
