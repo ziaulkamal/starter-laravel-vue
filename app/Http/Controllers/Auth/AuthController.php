@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\PendingRegistration;
 use App\Models\User;
+use App\Notifications\NewRegistrationNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -46,22 +48,25 @@ class AuthController extends Controller
     public function register(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'name'                  => ['required', 'string', 'max:255'],
-            'email'                 => ['required', 'email', 'max:255', 'unique:users,email'],
-            'password'              => ['required', 'confirmed', Password::defaults()],
+            'name'     => ['required', 'string', 'max:255'],
+            'email'    => ['required', 'email', 'max:255', 'unique:users,email', 'unique:pending_registrations,email'],
+            'phone'    => ['nullable', 'string', 'regex:/^62[0-9]{7,13}$/', 'unique:users,phone', 'unique:pending_registrations,phone'],
+            'password' => ['required', 'confirmed', Password::defaults()],
         ]);
 
-        $user = User::create([
-            'name'     => $data['name'],
-            'email'    => $data['email'],
-            'password' => Hash::make($data['password']),
+        $pending = PendingRegistration::create([
+            'name'       => $data['name'],
+            'email'      => $data['email'],
+            'phone'      => $data['phone'] ?? null,
+            'password'   => $data['password'],
+            'ip_address' => $request->ip(),
         ]);
 
-        Auth::login($user);
+        User::role('superadmin')->each(
+            fn (User $admin) => $admin->notify(new NewRegistrationNotification($pending))
+        );
 
-        $request->session()->regenerate();
-
-        return redirect('/');
+        return redirect('/login')->with('success', 'Pendaftaran berhasil! Akun Anda sedang menunggu persetujuan admin.');
     }
 
     public function logout(Request $request): RedirectResponse
