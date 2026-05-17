@@ -13,35 +13,54 @@ class RolePermissionSeeder extends Seeder
     {
         app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
-        // Auto-generate permissions dari config/modules.php
         $allPermissions = $this->buildPermissions();
 
         foreach ($allPermissions as $name) {
             Permission::firstOrCreate(['name' => $name]);
         }
 
-        // Hapus permission lama yang tidak ada di config lagi
         Permission::whereNotIn('name', $allPermissions)->delete();
 
-        // ── Role: user — tidak punya permission default ──────────────
-        Role::firstOrCreate(['name' => 'user'])
-            ->syncPermissions([]);
-
-        // ── Role: admin — semua kecuali delete ───────────────────────
-        Role::firstOrCreate(['name' => 'admin'])
-            ->syncPermissions(
-                collect($allPermissions)
-                    ->reject(fn ($p) => str_ends_with($p, '.delete'))
-                    ->values()
-                    ->all()
-            );
-
-        // ── Role: superadmin — semua permission ──────────────────────
-        Role::firstOrCreate(['name' => 'superadmin'])
+        // ── super_admin: semua permission ────────────────────────────
+        Role::firstOrCreate(['name' => 'super_admin'])
             ->syncPermissions($allPermissions);
+
+        // ── admin_kabupaten: kelola mustahik, pengajuan, verifikasi,
+        //    zakat monitor, muzakki, program, penyaluran, laporan ─────
+        $adminKabPermissions = collect($allPermissions)->filter(
+            fn ($p) => str_starts_with($p, 'mustahik.') ||
+                       str_starts_with($p, 'berkas.') ||
+                       str_starts_with($p, 'pengajuan.') ||
+                       str_starts_with($p, 'verifikasi.') ||
+                       str_starts_with($p, 'zakat-monitor.') ||
+                       str_starts_with($p, 'muzakki.') ||
+                       str_starts_with($p, 'program.') ||
+                       str_starts_with($p, 'penyaluran.') ||
+                       str_starts_with($p, 'laporan.') ||
+                       str_starts_with($p, 'users.view')
+        )->values()->all();
+
+        Role::firstOrCreate(['name' => 'admin_kabupaten'])
+            ->syncPermissions($adminKabPermissions);
+
+        // ── admin_gampong: mustahik gampong sendiri, pengajuan,
+        //    zakat fitrah, zakat mal, muzakki, laporan ─────────────
+        $adminGampongPermissions = collect($allPermissions)->filter(
+            fn ($p) => in_array($p, [
+                'mustahik.view', 'mustahik.create', 'mustahik.edit',
+                'berkas.upload', 'berkas.download',
+                'pengajuan.view', 'pengajuan.create',
+                'zakat-fitrah.view', 'zakat-fitrah.create', 'zakat-fitrah.delete', 'zakat-fitrah.kunci',
+                'zakat-mal.view', 'zakat-mal.create', 'zakat-mal.delete',
+                'muzakki.view', 'muzakki.create', 'muzakki.edit',
+                'laporan.view', 'laporan.export',
+            ])
+        )->values()->all();
+
+        Role::firstOrCreate(['name' => 'admin_gampong'])
+            ->syncPermissions($adminGampongPermissions);
     }
 
-    /** Flatten config/modules.php → ['users.view', 'users.create', ...] */
     private function buildPermissions(): array
     {
         $permissions = [];

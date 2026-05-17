@@ -234,18 +234,18 @@ const props = defineProps<{
 
 const page = usePage();
 const authRoles = computed<string[]>(() => (page.props.auth as any)?.roles ?? []);
-const isSuperAdmin = computed(() => authRoles.value.includes('superadmin'));
+const isSuperAdmin = computed(() => authRoles.value.includes('super_admin'));
 
-// Roles visible in the dropdown — non-superadmin cannot assign superadmin role
+// Roles visible in the dropdown — non-super_admin cannot assign super_admin role
 const selectableRoles = computed(() =>
-    isSuperAdmin.value ? props.roles : props.roles.filter(r => r !== 'superadmin')
+    isSuperAdmin.value ? props.roles : props.roles.filter(r => r !== 'super_admin')
 );
 
 // Per-row guards passed to AppTable
 const rowCanEdit   = (row: Record<string, unknown>) =>
-    isSuperAdmin.value || !(row.roles as string[]).includes('superadmin');
+    isSuperAdmin.value || !(row.roles as string[]).includes('super_admin');
 const rowCanDelete = (row: Record<string, unknown>) =>
-    isSuperAdmin.value || !(row.roles as string[]).includes('superadmin');
+    isSuperAdmin.value || !(row.roles as string[]).includes('super_admin');
 
 const columns: TableColumn[] = [
     { key: 'name',          label: 'Nama' },

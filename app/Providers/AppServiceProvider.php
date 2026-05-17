@@ -19,7 +19,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         // Superadmin bypasses all permission gates
-        Gate::before(fn ($user) => $user->hasRole('superadmin') ? true : null);
+        Gate::before(fn ($user) => $user->hasRole('super_admin') ? true : null);
 
         Carbon::setLocale('id');
         Password::defaults(fn () => Password::min(8)->mixedCase()->numbers()->symbols());

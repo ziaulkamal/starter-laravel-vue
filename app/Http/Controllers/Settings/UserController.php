@@ -48,8 +48,8 @@ class UserController extends Controller
             'avatar'    => ['nullable', 'url', 'max:500'],
         ]);
 
-        if (($data['role'] ?? '') === 'superadmin' && !auth()->user()->hasRole('superadmin')) {
-            return back()->with('error', 'Hanya superadmin yang dapat memberikan role superadmin.');
+        if (($data['role'] ?? '') === 'super_admin' && !auth()->user()->hasRole('super_admin')) {
+            return back()->with('error', 'Hanya super_admin yang dapat memberikan role super_admin.');
         }
 
         $user = User::create([
@@ -82,8 +82,8 @@ class UserController extends Controller
             'avatar'    => ['nullable', 'url', 'max:500'],
         ]);
 
-        if (($data['role'] ?? '') === 'superadmin' && !auth()->user()->hasRole('superadmin')) {
-            return back()->with('error', 'Hanya superadmin yang dapat memberikan role superadmin.');
+        if (($data['role'] ?? '') === 'super_admin' && !auth()->user()->hasRole('super_admin')) {
+            return back()->with('error', 'Hanya super_admin yang dapat memberikan role super_admin.');
         }
 
         $user->update([
@@ -116,8 +116,8 @@ class UserController extends Controller
 
     private function guardSuperadmin(User $target): ?RedirectResponse
     {
-        if ($target->hasRole('superadmin') && !auth()->user()->hasRole('superadmin')) {
-            return back()->with('error', 'Anda tidak memiliki akses untuk mengubah user superadmin.');
+        if ($target->hasRole('super_admin') && !auth()->user()->hasRole('super_admin')) {
+            return back()->with('error', 'Anda tidak memiliki akses untuk mengubah user super_admin.');
         }
 
         return null;

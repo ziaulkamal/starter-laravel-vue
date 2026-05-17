@@ -6,23 +6,19 @@ namespace App\Models;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
 
-#[Fillable(['name', 'email', 'phone', 'password', 'avatar', 'is_active', 'last_login_at', 'login_method', 'google_id', 'sso_id'])]
+#[Fillable(['name', 'email', 'phone', 'password', 'avatar', 'kode_wilayah', 'is_active', 'last_login_at', 'login_method', 'google_id', 'sso_id'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable, HasRoles;
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [
@@ -31,5 +27,20 @@ class User extends Authenticatable
             'is_active'         => 'boolean',
             'password'          => 'hashed',
         ];
+    }
+
+    public function wilayah(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(Wilayah::class, 'kode_wilayah', 'kode');
+    }
+
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query->where('is_active', true);
+    }
+
+    public function hasWilayah(): bool
+    {
+        return $this->kode_wilayah !== null;
     }
 }

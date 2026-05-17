@@ -61,7 +61,7 @@ class AuthController extends Controller
             'ip_address' => $request->ip(),
         ]);
 
-        User::role('superadmin')->each(
+        User::role('super_admin')->each(
             fn (User $admin) => $admin->notify(new NewRegistrationNotification($pending))
         );
 

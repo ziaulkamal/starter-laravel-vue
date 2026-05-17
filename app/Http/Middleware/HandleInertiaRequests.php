@@ -23,7 +23,7 @@ class HandleInertiaRequests extends Middleware
         $user            = $request->user() instanceof User ? $request->user() : null;
         $userRoles       = $user ? $user->getRoleNames()->toArray() : [];
         $userPermissions = $user ? $user->getAllPermissions()->pluck('name')->toArray() : [];
-        $isSuperAdmin    = in_array('superadmin', $userRoles);
+        $isSuperAdmin    = in_array('super_admin', $userRoles);
 
         return [
             ...parent::share($request),
@@ -32,12 +32,16 @@ class HandleInertiaRequests extends Middleware
 
             'auth' => [
                 'user' => $user ? [
-                    'id'           => $user->id,
-                    'name'         => $user->name,
-                    'email'        => $user->email,
-                    'avatar'       => $user->avatar,
-                    'login_method' => $user->login_method ?? 'password',
-                    'is_active'    => (bool) $user->is_active,
+                    'id'            => $user->id,
+                    'name'          => $user->name,
+                    'email'         => $user->email,
+                    'avatar'        => $user->avatar,
+                    'login_method'  => $user->login_method ?? 'password',
+                    'is_active'     => (bool) $user->is_active,
+                    'kode_wilayah'  => $user->kode_wilayah,
+                    'nama_wilayah'  => $user->kode_wilayah
+                        ? \App\Models\Wilayah::find($user->kode_wilayah)?->nama
+                        : null,
                 ] : null,
                 'permissions' => $userPermissions,
                 'roles'       => $userRoles,
@@ -121,15 +125,19 @@ class HandleInertiaRequests extends Middleware
     /** @param array<string, mixed> $menu @param array<string> $userRoles @param array<string> $userPermissions */
     private function canSeeMenu(array $menu, array $userRoles, array $userPermissions, bool $isSuperAdmin): bool
     {
-        if ($isSuperAdmin) return true;
-
-        if ($menu['permission'] !== null) {
-            return in_array($menu['permission'], $userPermissions);
+        // Role-restricted items: always check roles (including super_admin),
+        // so that super_admin only sees items explicitly tagged for their role.
+        if (!empty($menu['roles'])) {
+            return !empty(array_intersect($menu['roles'], $userRoles));
         }
 
-        if (empty($menu['roles'])) return true;
+        // Permission-restricted items: super_admin bypasses, others check permission.
+        if ($menu['permission'] !== null) {
+            return $isSuperAdmin || in_array($menu['permission'], $userPermissions);
+        }
 
-        return !empty(array_intersect($menu['roles'], $userRoles));
+        // No restriction → visible to all authenticated users.
+        return true;
     }
 
     /** @param array<string, mixed> $item @param array<string> $userRoles @param array<string> $userPermissions */

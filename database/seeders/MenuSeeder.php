@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Menu;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
 
@@ -16,7 +17,9 @@ class MenuSeeder extends Seeder
         DB::table('menus')->truncate();
         DB::statement('SET FOREIGN_KEY_CHECKS=1');
 
-        $superadmin = Role::where('name', 'superadmin')->first();
+        $superadmin = Role::where('name', 'super_admin')->first();
+        $adminKab   = Role::where('name', 'admin_kabupaten')->first();
+        $adminGamp  = Role::where('name', 'admin_gampong')->first();
 
         $items = [
             // ── Home ─────────────────────────────────────────────
@@ -32,6 +35,46 @@ class MenuSeeder extends Seeder
                 'href'        => '/',
                 'order_index' => 1,
                 // No restriction — visible to all authenticated users
+            ],
+
+            // ── Pendataan ─────────────────────────────────────────
+            [
+                'type'        => 'section',
+                'label'       => 'Pendataan',
+                'order_index' => 10,
+            ],
+            [
+                'type'        => 'item',
+                'label'       => 'Data Mustahik',
+                'icon'        => 'ti ti-users-group',
+                'href'        => '/admin/mustahik',
+                'order_index' => 11,
+                // Visible to super_admin & admin_kabupaten (role-restricted so super_admin
+                // must be included explicitly — see HandleInertiaRequests::canSeeMenu)
+                'roles'       => array_filter([$superadmin?->id, $adminKab?->id]),
+            ],
+            [
+                'type'        => 'item',
+                'label'       => 'Data Mustahik',
+                'icon'        => 'ti ti-users-group',
+                'href'        => '/gampong/mustahik',
+                'order_index' => 12,
+                'roles'       => array_filter([$adminGamp?->id]),
+            ],
+
+            // ── Master Data ───────────────────────────────────────
+            [
+                'type'        => 'section',
+                'label'       => 'Master Data',
+                'order_index' => 20,
+            ],
+            [
+                'type'        => 'item',
+                'label'       => 'Master Senif',
+                'icon'        => 'ti ti-category',
+                'href'        => '/admin/senif',
+                'order_index' => 21,
+                'roles'       => array_filter([$superadmin?->id, $adminKab?->id]),
             ],
 
             // ── Management ───────────────────────────────────────
@@ -119,5 +162,7 @@ class MenuSeeder extends Seeder
                 }
             }
         }
+
+        Cache::forget('app.menu');
     }
 }

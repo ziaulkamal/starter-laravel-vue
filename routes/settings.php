@@ -5,7 +5,7 @@ use App\Http\Controllers\Settings\ProfileMenuController;
 use Illuminate\Support\Facades\Route;
 
 // ── Superadmin only ───────────────────────────────────────────────
-Route::middleware('role:superadmin')->prefix('settings')->name('settings.')->group(function () {
+Route::middleware('role:super_admin')->prefix('settings')->name('settings.')->group(function () {
 
     Route::middleware('permission:menu')->group(function () {
         Route::post('menus/reorder', [MenuController::class, 'reorder'])

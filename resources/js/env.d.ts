@@ -1,4 +1,13 @@
 /// <reference types="vite/client" />
+/// <reference types="ziggy-js" />
+
+import type { route as ziggyRoute } from 'ziggy-js'
+
+declare module '@vue/runtime-core' {
+    interface ComponentCustomProperties {
+        route: typeof ziggyRoute
+    }
+}
 
 declare module 'bootstrap' {
     export class Modal {

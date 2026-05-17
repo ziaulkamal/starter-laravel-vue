@@ -2,25 +2,41 @@
 
 /*
 |--------------------------------------------------------------------------
-| Module Permission Registry
+| Module Permission Registry — Sistem Baitul Mal Aceh Barat Daya
 |--------------------------------------------------------------------------
-| Daftarkan setiap modul beserta aksi yang tersedia.
-| Seeder akan membaca file ini dan membuat permission otomatis.
-|
-| Format:
-|   'nama-modul' => ['aksi1', 'aksi2', ...]
-|
-| Permission yang dihasilkan: {modul}.{aksi}
-| Contoh: 'users' => ['view','create'] → users.view, users.create
-|
+| Format: 'nama-modul' => ['aksi1', 'aksi2', ...]
+| Hasil: {modul}.{aksi} → contoh: users.view, mustahik.create
 */
 
 return [
-    'users'    => ['view', 'create', 'edit', 'delete'],
-    'settings' => ['menu', 'profile-menu'],
+    // ── Administrasi Sistem (Super Admin) ────────────────────────────
+    'users'       => ['view', 'create', 'edit', 'delete', 'toggle-active'],
+    'gampongs'    => ['view', 'create', 'edit', 'delete'],
+    'roles'       => ['view', 'edit'],
+    'konfigurasi' => ['view', 'edit'],
+    'audit-log'   => ['view'],
+    'settings'    => ['menu', 'profile-menu'],
 
-    // Contoh modul baru — uncomment jika modul sudah dibuat:
-    // 'employees' => ['view', 'create', 'edit', 'delete'],
-    // 'reports'   => ['view', 'export'],
-    // 'products'  => ['view', 'create', 'edit', 'delete'],
+    // ── Mustahik (Admin Kabupaten + Admin Gampong) ───────────────────
+    'mustahik'    => ['view', 'create', 'edit', 'delete', 'nonaktifkan'],
+    'berkas'      => ['upload', 'download', 'delete'],
+
+    // ── Pengajuan & Verifikasi ───────────────────────────────────────
+    'pengajuan'   => ['view', 'create'],
+    'verifikasi'  => ['view', 'approve', 'tolak', 'bulk-approve'],
+
+    // ── Zakat ────────────────────────────────────────────────────────
+    'zakat-fitrah' => ['view', 'create', 'delete', 'kunci'],
+    'zakat-mal'    => ['view', 'create', 'delete'],
+    'zakat-monitor'=> ['view', 'unlock'],
+
+    // ── Muzakki ─────────────────────────────────────────────────────
+    'muzakki'     => ['view', 'create', 'edit'],
+
+    // ── Program & Penyaluran ─────────────────────────────────────────
+    'program'     => ['view', 'create', 'edit', 'delete'],
+    'penyaluran'  => ['view', 'create', 'bulk'],
+
+    // ── Laporan ──────────────────────────────────────────────────────
+    'laporan'     => ['view', 'export'],
 ];
