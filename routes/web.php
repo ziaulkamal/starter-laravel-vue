@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\SocialAuthController;
+use App\Http\Controllers\Mtq\Peserta\PesertaGeneratorController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Settings\PendingRegistrationController;
@@ -71,6 +72,11 @@ Route::middleware('auth')->group(function () {
         Route::get('/notifications',              [NotificationController::class, 'index'])->name('notifications.index');
         Route::post('/notifications/{id}/read',   [NotificationController::class, 'markRead'])->name('notifications.read');
         Route::post('/notifications/read-all',    [NotificationController::class, 'markAllRead'])->name('notifications.read-all');
+
+        // Peserta generator (superadmin only)
+        Route::post('/mtq/peserta/generate', [PesertaGeneratorController::class, 'generate'])
+            ->name('mtq.peserta.generate')
+            ->middleware('role:superadmin');
     });
 
     Route::get('/demo/table', fn () => Inertia::render('Components/TableDemo'));

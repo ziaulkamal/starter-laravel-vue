@@ -16,7 +16,7 @@ class StorePesertaRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'kafilah_id'    => ['required', 'integer', 'exists:kafilahs,id'],
+            'kafilah_id'    => [$this->user()->hasRole('user') ? 'nullable' : 'required', 'integer', 'exists:kafilahs,id'],
             'cabang_id'     => ['required', 'integer', 'exists:cabangs,id'],
             'golongan_id'   => ['required', 'integer', 'exists:golongans,id'],
             'nama'          => ['required', 'string', 'max:100'],

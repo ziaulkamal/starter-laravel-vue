@@ -74,6 +74,11 @@
                         <span v-if="!(value as string[]).length" class="text-muted small">—</span>
                     </template>
 
+                    <template #cell-kafilah_nama="{ value }">
+                        <span v-if="value" class="badge text-bg-light text-dark border">{{ value }}</span>
+                        <span v-else class="text-muted small">—</span>
+                    </template>
+
                     <template #cell-login_method="{ value }">
                         <span v-if="value === 'google'" class="badge d-inline-flex align-items-center gap-1" style="background:#f1f3f4;color:#3c4043;font-weight:500">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="12" height="12">
@@ -151,6 +156,23 @@
                             <div class="invalid-feedback">{{ form.errors.role }}</div>
                         </div>
 
+                        <!-- Kafilah (hanya tampil jika role = user) -->
+                        <div v-if="form.role === 'user'" class="mb-3">
+                            <label class="form-label fw-medium">
+                                Kafilah (Kabupaten/Kota)
+                                <span class="text-danger">*</span>
+                            </label>
+                            <select v-model="form.kafilah_id" class="form-select"
+                                :class="{ 'is-invalid': form.errors.kafilah_id }">
+                                <option :value="null">— Pilih Kafilah —</option>
+                                <option v-for="k in kafilahs" :key="k.id" :value="k.id">
+                                    {{ k.nama_kabupaten }}
+                                </option>
+                            </select>
+                            <div class="form-text">User hanya bisa mengakses data dari kafilah ini.</div>
+                            <div class="invalid-feedback">{{ form.errors.kafilah_id }}</div>
+                        </div>
+
                         <!-- Avatar URL -->
                         <div class="mb-3">
                             <label class="form-label fw-medium">Avatar URL</label>
@@ -225,33 +247,40 @@ interface UserRow {
     last_login_at: string | null;
     login_method: 'password' | 'google' | 'sso';
     roles: string[];
+    kafilah_id: number | null;
+    kafilah_nama: string | null;
+}
+
+interface KafilahOption {
+    id: number;
+    nama_kabupaten: string;
 }
 
 const props = defineProps<{
     users: UserRow[];
     roles: string[];
+    kafilahs: KafilahOption[];
 }>();
 
 const page = usePage();
 const authRoles = computed<string[]>(() => (page.props.auth as any)?.roles ?? []);
 const isSuperAdmin = computed(() => authRoles.value.includes('superadmin'));
 
-// Roles visible in the dropdown — non-superadmin cannot assign superadmin role
 const selectableRoles = computed(() =>
     isSuperAdmin.value ? props.roles : props.roles.filter(r => r !== 'superadmin')
 );
 
-// Per-row guards passed to AppTable
 const rowCanEdit   = (row: Record<string, unknown>) =>
     isSuperAdmin.value || !(row.roles as string[]).includes('superadmin');
 const rowCanDelete = (row: Record<string, unknown>) =>
     isSuperAdmin.value || !(row.roles as string[]).includes('superadmin');
 
 const columns: TableColumn[] = [
-    { key: 'name',          label: 'Nama' },
-    { key: 'email',         label: 'Email' },
-    { key: 'roles',         label: 'Role' },
-    { key: 'login_method',  label: 'Metode Login' },
+    { key: 'name',         label: 'Nama' },
+    { key: 'email',        label: 'Email' },
+    { key: 'roles',        label: 'Role' },
+    { key: 'kafilah_nama', label: 'Kafilah' },
+    { key: 'login_method', label: 'Metode Login' },
     {
         key: 'is_active',
         label: 'Status',
@@ -270,21 +299,23 @@ const isEditing = ref(false);
 const editingId = ref<number | null>(null);
 
 const form = useForm({
-    name:      '',
-    email:     '',
-    password:  '',
-    role:      '',
-    avatar:    '',
-    is_active: true,
+    name:       '',
+    email:      '',
+    password:   '',
+    role:       '',
+    avatar:     '',
+    is_active:  true,
+    kafilah_id: null as number | null,
 });
 
 function resetForm() {
-    form.name      = '';
-    form.email     = '';
-    form.password  = '';
-    form.role      = '';
-    form.avatar    = '';
-    form.is_active = true;
+    form.name       = '';
+    form.email      = '';
+    form.password   = '';
+    form.role       = '';
+    form.avatar     = '';
+    form.is_active  = true;
+    form.kafilah_id = null;
     form.clearErrors();
 }
 
@@ -297,14 +328,15 @@ function openCreate() {
 
 function openEdit(row: Record<string, unknown>) {
     const user = row as unknown as UserRow;
-    isEditing.value = true;
-    editingId.value = user.id;
-    form.name      = user.name;
-    form.email     = user.email;
-    form.password  = '';
-    form.role      = user.roles[0] ?? '';
-    form.avatar    = user.avatar ?? '';
-    form.is_active = user.is_active;
+    isEditing.value     = true;
+    editingId.value     = user.id;
+    form.name           = user.name;
+    form.email          = user.email;
+    form.password       = '';
+    form.role           = user.roles[0] ?? '';
+    form.avatar         = user.avatar ?? '';
+    form.is_active      = user.is_active;
+    form.kafilah_id     = user.kafilah_id;
     form.clearErrors();
     getModal('userModal').show();
 }

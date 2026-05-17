@@ -17,6 +17,8 @@ class MenuSeeder extends Seeder
         DB::statement('SET FOREIGN_KEY_CHECKS=1');
 
         $superadmin = Role::where('name', 'superadmin')->first();
+        $admin      = Role::where('name', 'admin')->first();
+        $user       = Role::where('name', 'user')->first();
 
         $items = [
             // ── Home ─────────────────────────────────────────────
@@ -31,7 +33,6 @@ class MenuSeeder extends Seeder
                 'icon'        => 'ti ti-layout-dashboard',
                 'href'        => '/',
                 'order_index' => 1,
-                // No restriction — visible to all authenticated users
             ],
 
             // ── Management ───────────────────────────────────────
@@ -69,7 +70,6 @@ class MenuSeeder extends Seeder
                 'icon'        => 'ti ti-user-circle',
                 'href'        => '/profile',
                 'order_index' => 6,
-                // No restriction — visible to all
             ],
 
             // ── SIM-MTQ ──────────────────────────────────────────
@@ -101,19 +101,46 @@ class MenuSeeder extends Seeder
                 'href'        => '/mtq/peserta',
                 'order_index' => 9,
             ],
+            // Pengajuan Edit — hanya untuk role user (petugas kafilah)
+            [
+                'type'        => 'item',
+                'label'       => 'Pengajuan Edit',
+                'icon'        => 'ti ti-edit-circle',
+                'href'        => '/mtq/pengajuan-edit',
+                'order_index' => 10,
+                'roles'       => array_filter([$user?->id]),
+            ],
+            // Manajemen Pengajuan Edit — untuk admin dan superadmin
+            [
+                'type'        => 'item',
+                'label'       => 'Manajemen Pengajuan',
+                'icon'        => 'ti ti-clipboard-check',
+                'href'        => '/mtq/pengajuan-edit/manage',
+                'order_index' => 11,
+                'roles'       => array_filter([$admin?->id, $superadmin?->id]),
+            ],
+            // Manajemen Pengajuan Hapus — hanya superadmin
+            [
+                'type'        => 'item',
+                'label'       => 'Pengajuan Hapus',
+                'icon'        => 'ti ti-trash-x',
+                'href'        => '/mtq/pengajuan-hapus/manage',
+                'order_index' => 12,
+                'roles'       => array_filter([$superadmin?->id]),
+            ],
 
             // ── Pengaturan ────────────────────────────────────────
             [
                 'type'        => 'section',
                 'label'       => 'Pengaturan',
-                'order_index' => 10,
+                'order_index' => 13,
             ],
             [
                 'type'        => 'item',
                 'label'       => 'Pengaturan Menu',
                 'icon'        => 'ti ti-menu-2',
                 'href'        => '/settings/menus',
-                'order_index' => 11,
+                'order_index' => 14,
                 'roles'       => [$superadmin?->id],
                 'children'    => [
                     ['label' => 'Menu Sidebar', 'href' => '/settings/menus',        'order_index' => 0],

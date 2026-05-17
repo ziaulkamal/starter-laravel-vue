@@ -60,6 +60,8 @@ interface Props {
     actionPermissions?: ActionPermissions;
     /** Override daftar permission (untuk demo/testing). Jika diisi, tidak membaca page.props. */
     permissionList?: string[];
+    /** Per-row guard: jika di-set, tombol view hanya muncul jika fungsi return true */
+    rowCanView?: (row: Record<string, unknown>) => boolean;
     /** Per-row guard: jika di-set, tombol edit hanya muncul jika fungsi return true */
     rowCanEdit?: (row: Record<string, unknown>) => boolean;
     /** Per-row guard: jika di-set, tombol delete hanya muncul jika fungsi return true */
@@ -237,7 +239,8 @@ const resolvedActions = computed<Required<TableActions>>(() => {
 });
 
 const hasActions = computed(() =>
-    resolvedActions.value.view || resolvedActions.value.edit || resolvedActions.value.delete,
+    resolvedActions.value.view || resolvedActions.value.edit || resolvedActions.value.delete
+    || !!slots['row-actions'],
 );
 
 // ─── Table meta ───────────────────────────────────────────────────────────────
@@ -628,9 +631,9 @@ function hasCellSlot(key: string): boolean {
 
                         <!-- Actions cell -->
                         <td v-if="hasActions">
-                            <div class="d-flex align-items-center justify-content-center gap-1">
+                            <div class="d-flex align-items-center justify-content-center gap-1 flex-wrap">
                                 <button
-                                    v-if="resolvedActions.view"
+                                    v-if="resolvedActions.view && (!rowCanView || rowCanView(row))"
                                     type="button"
                                     class="btn btn-sm bg-primary-subtle text-primary app-action-btn"
                                     title="Lihat detail"
@@ -656,6 +659,7 @@ function hasCellSlot(key: string): boolean {
                                 >
                                     <i class="ti ti-trash fs-5"></i>
                                 </button>
+                                <slot name="row-actions" :row="row" :index="pageStart + rowIdx" />
                             </div>
                         </td>
                     </tr>

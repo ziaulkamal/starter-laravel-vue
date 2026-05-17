@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -39,5 +40,33 @@ class Peserta extends Model
     public function berkas(): HasMany
     {
         return $this->hasMany(BerkasPeserta::class);
+    }
+
+    public function pengajuanEdit(): HasMany
+    {
+        return $this->hasMany(PengajuanEditPeserta::class);
+    }
+
+    public function pengajuanEditMenunggu(): HasMany
+    {
+        return $this->hasMany(PengajuanEditPeserta::class)->where('status', 'menunggu');
+    }
+
+    public function pengajuanHapus(): HasMany
+    {
+        return $this->hasMany(PengajuanHapusPeserta::class);
+    }
+
+    public function pengajuanHapusMenunggu(): HasMany
+    {
+        return $this->hasMany(PengajuanHapusPeserta::class)->where('status', 'menunggu');
+    }
+
+    public function scopeForUser(Builder $query, ?int $kafilahId): Builder
+    {
+        if ($kafilahId === null) {
+            return $query->whereRaw('0 = 1');
+        }
+        return $query->where('kafilah_id', $kafilahId);
     }
 }

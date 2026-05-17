@@ -7,11 +7,12 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
 
-#[Fillable(['name', 'email', 'phone', 'password', 'avatar', 'is_active', 'last_login_at', 'login_method', 'google_id', 'sso_id'])]
+#[Fillable(['kafilah_id', 'name', 'email', 'phone', 'password', 'avatar', 'is_active', 'last_login_at', 'login_method', 'google_id', 'sso_id'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -31,5 +32,10 @@ class User extends Authenticatable
             'is_active'         => 'boolean',
             'password'          => 'hashed',
         ];
+    }
+
+    public function kafilah(): BelongsTo
+    {
+        return $this->belongsTo(Kafilah::class);
     }
 }

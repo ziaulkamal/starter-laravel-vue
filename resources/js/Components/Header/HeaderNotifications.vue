@@ -25,41 +25,171 @@
             <div style="max-height: 380px; overflow-y: auto">
                 <template v-if="items.length > 0">
                     <div v-for="item in items" :key="item.id"
-                         class="d-flex gap-3 px-4 py-3 border-bottom notification-item bg-light-subtle"
-                         @click="markRead(item)">
+                         class="d-flex gap-3 px-3 py-3 border-bottom notification-item bg-light-subtle position-relative">
 
-                        <div class="flex-shrink-0 mt-1">
-                            <span class="badge text-bg-warning rounded-circle p-2">
-                                <i class="ti ti-user-plus fs-5"></i>
-                            </span>
-                        </div>
+                        <!-- Tombol dismiss (×) — selalu ada di pojok kanan atas -->
+                        <button
+                            class="btn-dismiss position-absolute"
+                            title="Sembunyikan notifikasi ini"
+                            @click.stop="markRead(item)">
+                            <i class="ti ti-x"></i>
+                        </button>
 
-                        <div class="flex-grow-1 overflow-hidden">
-                            <p class="mb-1 fw-semibold text-truncate small">
-                                Pendaftaran Baru
-                                <span v-if="isOlderThan24h(item)"
-                                      class="badge text-bg-warning ms-1" style="font-size: 0.55rem">
-                                    Butuh Peninjauan
+                        <!-- ── new_registration ───────────────────────────── -->
+                        <template v-if="item.data.type === 'new_registration'">
+                            <div class="flex-shrink-0 mt-1">
+                                <span class="badge text-bg-warning rounded-circle p-2">
+                                    <i class="ti ti-user-plus fs-5"></i>
                                 </span>
-                                <span v-else
-                                      class="badge text-bg-primary ms-1" style="font-size: 0.55rem">
-                                    Baru
-                                </span>
-                            </p>
-                            <p class="mb-1 text-muted small lh-sm">
-                                <strong>{{ item.data.name }}</strong> ({{ item.data.email }})<br>
-                                <span v-if="item.data.phone">HP: +{{ item.data.phone }}<br></span>
-                                <span class="text-danger">IP: {{ item.data.ip_address }}</span>
-                            </p>
-                            <p class="mb-0 text-muted" style="font-size: 0.7rem">{{ item.created_at }}</p>
-                        </div>
+                            </div>
+                            <div class="flex-grow-1 overflow-hidden pe-4">
+                                <p class="mb-1 fw-semibold text-truncate small">
+                                    Pendaftaran Baru
+                                    <span v-if="isOlderThan24h(item)"
+                                          class="badge text-bg-warning ms-1" style="font-size: 0.55rem">
+                                        Butuh Peninjauan
+                                    </span>
+                                    <span v-else
+                                          class="badge text-bg-primary ms-1" style="font-size: 0.55rem">
+                                        Baru
+                                    </span>
+                                </p>
+                                <p class="mb-1 text-muted small lh-sm">
+                                    <strong>{{ item.data.name }}</strong> ({{ item.data.email }})<br>
+                                    <span v-if="item.data.phone">HP: +{{ item.data.phone }}<br></span>
+                                    <span class="text-danger">IP: {{ item.data.ip_address }}</span>
+                                </p>
+                                <p class="mb-0 text-muted" style="font-size: 0.7rem">{{ item.created_at }}</p>
+                                <a :href="item.data.url"
+                                   class="btn btn-sm btn-outline-primary px-2 py-1 mt-2 d-inline-block" style="font-size: 0.7rem"
+                                   @click="markRead(item)">
+                                    Review
+                                </a>
+                            </div>
+                        </template>
 
-                        <div class="flex-shrink-0 align-self-center">
-                            <a :href="item.data.url" class="btn btn-sm btn-outline-primary px-2 py-1" style="font-size: 0.7rem"
-                               @click.stop>
-                                Review
-                            </a>
-                        </div>
+                        <!-- ── pengajuan_edit_dibuat ───────────────────────── -->
+                        <template v-else-if="item.data.type === 'pengajuan_edit_dibuat'">
+                            <div class="flex-shrink-0 mt-1">
+                                <span class="badge text-bg-info rounded-circle p-2">
+                                    <i class="ti ti-edit-circle fs-5"></i>
+                                </span>
+                            </div>
+                            <div class="flex-grow-1 overflow-hidden pe-4">
+                                <p class="mb-1 fw-semibold text-truncate small">
+                                    Pengajuan Edit
+                                    <span class="badge text-bg-primary ms-1" style="font-size: 0.55rem">Baru</span>
+                                </p>
+                                <p class="mb-1 text-muted small lh-sm">
+                                    <strong>{{ item.data.peserta_nama }}</strong> — {{ item.data.kafilah_nama }}<br>
+                                    Pemohon: {{ item.data.requester_name }}<br>
+                                    <span class="fst-italic">{{ item.data.pesan }}</span>
+                                </p>
+                                <p class="mb-0 text-muted" style="font-size: 0.7rem">{{ item.created_at }}</p>
+                                <a :href="item.data.url"
+                                   class="btn btn-sm btn-outline-info px-2 py-1 mt-2 d-inline-block" style="font-size: 0.7rem"
+                                   @click="markRead(item)">
+                                    Tinjau
+                                </a>
+                            </div>
+                        </template>
+
+                        <!-- ── pengajuan_edit_direspon ─────────────────────── -->
+                        <template v-else-if="item.data.type === 'pengajuan_edit_direspon'">
+                            <div class="flex-shrink-0 mt-1">
+                                <span :class="['badge rounded-circle p-2', item.data.status === 'disetujui' ? 'text-bg-success' : 'text-bg-danger']">
+                                    <i :class="['fs-5', item.data.status === 'disetujui' ? 'ti ti-check' : 'ti ti-x']"></i>
+                                </span>
+                            </div>
+                            <div class="flex-grow-1 overflow-hidden pe-4">
+                                <p class="mb-1 fw-semibold text-truncate small">
+                                    Respons Pengajuan Edit
+                                    <span :class="['badge ms-1', item.data.status === 'disetujui' ? 'text-bg-success' : 'text-bg-danger']"
+                                          style="font-size: 0.55rem">
+                                        {{ item.data.status === 'disetujui' ? 'Disetujui' : 'Ditolak' }}
+                                    </span>
+                                </p>
+                                <p class="mb-1 text-muted small lh-sm">
+                                    Peserta: <strong>{{ item.data.peserta_nama }}</strong><br>
+                                    <span v-if="item.data.catatan_admin" class="fst-italic">{{ item.data.catatan_admin }}</span>
+                                    <span v-else class="fst-italic text-muted">Tidak ada catatan</span>
+                                </p>
+                                <p class="mb-0 text-muted" style="font-size: 0.7rem">{{ item.created_at }}</p>
+                                <a :href="item.data.url"
+                                   class="btn btn-sm btn-outline-secondary px-2 py-1 mt-2 d-inline-block" style="font-size: 0.7rem"
+                                   @click="markRead(item)">
+                                    Lihat
+                                </a>
+                            </div>
+                        </template>
+
+                        <!-- ── pengajuan_hapus_dibuat ─────────────────────── -->
+                        <template v-else-if="item.data.type === 'pengajuan_hapus_dibuat'">
+                            <div class="flex-shrink-0 mt-1">
+                                <span class="badge text-bg-danger rounded-circle p-2">
+                                    <i class="ti ti-trash fs-5"></i>
+                                </span>
+                            </div>
+                            <div class="flex-grow-1 overflow-hidden pe-4">
+                                <p class="mb-1 fw-semibold text-truncate small">
+                                    Pengajuan Hapus Peserta
+                                    <span class="badge text-bg-danger ms-1" style="font-size: 0.55rem">Baru</span>
+                                </p>
+                                <p class="mb-1 text-muted small lh-sm">
+                                    <strong>{{ item.data.peserta_nama }}</strong> — {{ item.data.kafilah_nama }}<br>
+                                    Pemohon: {{ item.data.requester_name }}<br>
+                                    <span class="fst-italic">{{ item.data.pesan }}</span>
+                                </p>
+                                <p class="mb-0 text-muted" style="font-size: 0.7rem">{{ item.created_at }}</p>
+                                <a :href="item.data.url"
+                                   class="btn btn-sm btn-outline-danger px-2 py-1 mt-2 d-inline-block" style="font-size: 0.7rem"
+                                   @click="markRead(item)">
+                                    Tinjau
+                                </a>
+                            </div>
+                        </template>
+
+                        <!-- ── pengajuan_hapus_direspon ────────────────────── -->
+                        <template v-else-if="item.data.type === 'pengajuan_hapus_direspon'">
+                            <div class="flex-shrink-0 mt-1">
+                                <span :class="['badge rounded-circle p-2', item.data.status === 'disetujui' ? 'text-bg-danger' : 'text-bg-secondary']">
+                                    <i :class="['fs-5', item.data.status === 'disetujui' ? 'ti ti-trash-off' : 'ti ti-x']"></i>
+                                </span>
+                            </div>
+                            <div class="flex-grow-1 overflow-hidden pe-4">
+                                <p class="mb-1 fw-semibold text-truncate small">
+                                    Respons Pengajuan Hapus
+                                    <span :class="['badge ms-1', item.data.status === 'disetujui' ? 'text-bg-danger' : 'text-bg-secondary']"
+                                          style="font-size: 0.55rem">
+                                        {{ item.data.status === 'disetujui' ? 'Disetujui' : 'Ditolak' }}
+                                    </span>
+                                </p>
+                                <p class="mb-1 text-muted small lh-sm">
+                                    Peserta: <strong>{{ item.data.peserta_nama }}</strong><br>
+                                    <span v-if="item.data.catatan_admin" class="fst-italic">{{ item.data.catatan_admin }}</span>
+                                    <span v-else class="fst-italic text-muted">Tidak ada catatan</span>
+                                </p>
+                                <p class="mb-0 text-muted" style="font-size: 0.7rem">{{ item.created_at }}</p>
+                                <a :href="item.data.url"
+                                   class="btn btn-sm btn-outline-secondary px-2 py-1 mt-2 d-inline-block" style="font-size: 0.7rem"
+                                   @click="markRead(item)">
+                                    Lihat
+                                </a>
+                            </div>
+                        </template>
+
+                        <!-- ── fallback (unknown type) ────────────────────── -->
+                        <template v-else>
+                            <div class="flex-shrink-0 mt-1">
+                                <span class="badge text-bg-secondary rounded-circle p-2">
+                                    <i class="ti ti-bell fs-5"></i>
+                                </span>
+                            </div>
+                            <div class="flex-grow-1 overflow-hidden pe-4">
+                                <p class="mb-1 fw-semibold text-truncate small">Notifikasi</p>
+                                <p class="mb-0 text-muted" style="font-size: 0.7rem">{{ item.created_at }}</p>
+                            </div>
+                        </template>
                     </div>
                 </template>
 
@@ -141,18 +271,26 @@ function isOlderThan24h(item) {
     return (Date.now() / 1000 - item.created_at_ts) > 86400;
 }
 
+function xsrfToken() {
+    const m = document.cookie.match(/(?:^|;\s*)XSRF-TOKEN=([^;]+)/);
+    return m ? decodeURIComponent(m[1]) : '';
+}
+
+function postHeaders() {
+    return {
+        'X-XSRF-TOKEN': xsrfToken(),
+        'X-Requested-With': 'XMLHttpRequest',
+    };
+}
+
 async function markRead(item) {
-    // Optimistic: langsung hilangkan dari list
     items.value = items.value.filter(i => i.id !== item.id);
     unreadCount.value = Math.max(0, unreadCount.value - 1);
     prevCount = unreadCount.value;
 
     await fetch(`/api/internal/notifications/${item.id}/read`, {
         method: 'POST',
-        headers: {
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ?? '',
-            'X-Requested-With': 'XMLHttpRequest',
-        },
+        headers: postHeaders(),
     });
 }
 
@@ -163,10 +301,7 @@ async function markAllRead() {
 
     await fetch('/api/internal/notifications/read-all', {
         method: 'POST',
-        headers: {
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ?? '',
-            'X-Requested-With': 'XMLHttpRequest',
-        },
+        headers: postHeaders(),
     });
 }
 
@@ -184,10 +319,33 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .notification-item {
-    cursor: pointer;
     transition: background 0.15s;
 }
 .notification-item:hover {
     background: var(--bs-tertiary-bg) !important;
+}
+.btn-dismiss {
+    top: 6px;
+    right: 8px;
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    background: none;
+    border: none;
+    color: var(--bs-secondary-color);
+    opacity: 0.4;
+    font-size: 0.75rem;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: opacity 0.15s, background 0.15s;
+}
+.btn-dismiss:hover {
+    opacity: 1;
+    background: var(--bs-danger-bg-subtle);
+    color: var(--bs-danger);
 }
 </style>

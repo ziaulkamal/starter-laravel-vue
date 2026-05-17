@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Settings;
 
 use App\Http\Controllers\Controller;
+use App\Models\Kafilah;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -17,7 +18,7 @@ class UserController extends Controller
 {
     public function index(): Response
     {
-        $users = User::with('roles')
+        $users = User::with(['roles', 'kafilah'])
             ->orderBy('name')
             ->get()
             ->map(fn (User $user) => [
@@ -29,23 +30,27 @@ class UserController extends Controller
                 'last_login_at' => $user->last_login_at?->format('d M Y H:i'),
                 'login_method'  => $user->login_method ?? 'password',
                 'roles'         => $user->roles->pluck('name'),
+                'kafilah_id'    => $user->kafilah_id,
+                'kafilah_nama'  => $user->kafilah?->nama_kabupaten,
             ]);
 
         return Inertia::render('Settings/Users/Index', [
-            'users' => $users,
-            'roles' => Role::orderBy('name')->pluck('name'),
+            'users'    => $users,
+            'roles'    => Role::orderBy('name')->pluck('name'),
+            'kafilahs' => Kafilah::orderBy('nama_kabupaten')->get(['id', 'nama_kabupaten']),
         ]);
     }
 
     public function store(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'name'      => ['required', 'string', 'max:255'],
-            'email'     => ['required', 'email', 'max:255', 'unique:users,email'],
-            'password'  => ['required', Password::defaults()],
-            'role'      => ['nullable', 'string', 'exists:roles,name'],
-            'is_active' => ['boolean'],
-            'avatar'    => ['nullable', 'url', 'max:500'],
+            'name'        => ['required', 'string', 'max:255'],
+            'email'       => ['required', 'email', 'max:255', 'unique:users,email'],
+            'password'    => ['required', Password::defaults()],
+            'role'        => ['nullable', 'string', 'exists:roles,name'],
+            'is_active'   => ['boolean'],
+            'avatar'      => ['nullable', 'url', 'max:500'],
+            'kafilah_id'  => ['nullable', 'integer', 'exists:kafilahs,id'],
         ]);
 
         if (($data['role'] ?? '') === 'superadmin' && !auth()->user()->hasRole('superadmin')) {
@@ -53,11 +58,12 @@ class UserController extends Controller
         }
 
         $user = User::create([
-            'name'      => $data['name'],
-            'email'     => $data['email'],
-            'password'  => Hash::make($data['password']),
-            'is_active' => $data['is_active'] ?? true,
-            'avatar'    => $data['avatar'] ?? null,
+            'name'       => $data['name'],
+            'email'      => $data['email'],
+            'password'   => Hash::make($data['password']),
+            'is_active'  => $data['is_active'] ?? true,
+            'avatar'     => $data['avatar'] ?? null,
+            'kafilah_id' => ($data['role'] ?? '') === 'user' ? ($data['kafilah_id'] ?? null) : null,
         ]);
 
         if (!empty($data['role'])) {
@@ -74,12 +80,13 @@ class UserController extends Controller
         }
 
         $data = $request->validate([
-            'name'      => ['required', 'string', 'max:255'],
-            'email'     => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
-            'password'  => ['nullable', Password::defaults()],
-            'role'      => ['nullable', 'string', 'exists:roles,name'],
-            'is_active' => ['boolean'],
-            'avatar'    => ['nullable', 'url', 'max:500'],
+            'name'        => ['required', 'string', 'max:255'],
+            'email'       => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
+            'password'    => ['nullable', Password::defaults()],
+            'role'        => ['nullable', 'string', 'exists:roles,name'],
+            'is_active'   => ['boolean'],
+            'avatar'      => ['nullable', 'url', 'max:500'],
+            'kafilah_id'  => ['nullable', 'integer', 'exists:kafilahs,id'],
         ]);
 
         if (($data['role'] ?? '') === 'superadmin' && !auth()->user()->hasRole('superadmin')) {
@@ -87,10 +94,11 @@ class UserController extends Controller
         }
 
         $user->update([
-            'name'      => $data['name'],
-            'email'     => $data['email'],
-            'is_active' => $data['is_active'] ?? $user->is_active,
-            'avatar'    => $data['avatar'] ?? $user->avatar,
+            'name'       => $data['name'],
+            'email'      => $data['email'],
+            'is_active'  => $data['is_active'] ?? $user->is_active,
+            'avatar'     => $data['avatar'] ?? $user->avatar,
+            'kafilah_id' => ($data['role'] ?? '') === 'user' ? ($data['kafilah_id'] ?? null) : null,
         ]);
 
         if (!empty($data['password'])) {

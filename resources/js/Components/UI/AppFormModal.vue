@@ -19,7 +19,7 @@
 
                 <div class="modal-footer">
                     <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-primary" :disabled="processing">
+                    <button type="submit" :class="['btn', submitClass]" :disabled="processing">
                         <span
                             v-if="processing"
                             class="spinner-border spinner-border-sm me-1"
@@ -43,12 +43,14 @@ interface Props {
     size?: 'sm' | 'md' | 'lg' | 'xl';
     processing?: boolean;
     submitLabel?: string;
+    submitClass?: string;
 }
 
 const props = withDefaults(defineProps<Props>(), {
     size: 'md',
     processing: false,
     submitLabel: 'Simpan',
+    submitClass: 'btn-primary',
 });
 
 const emit = defineEmits<{
